@@ -1,12 +1,25 @@
+databases:
+  - name: link-plan-db
+    plan: free
+    databaseName: linkplan
+    user: linkplan
+
 services:
   - type: web
     name: link-plan-api
-    env: node
+    runtime: node
+    plan: free
     rootDir: backend
-    buildCommand: npm ci && npm run prisma:generate
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy
     startCommand: npm run start
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: link-plan-db
+          property: connectionString
       - key: FRONTEND_URL
         sync: false
+      - key: NODE_VERSION
+        value: "20"
