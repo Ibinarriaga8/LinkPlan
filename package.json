@@ -10,6 +10,15 @@
     "dev:backend": "npm --prefix backend run dev",
     "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
     "test": "npm --prefix backend run test",
-    "build": "npm --prefix backend run prisma:generate && npm --prefix frontend run build"
+    "build": "npm --prefix backend run prisma:generate && npm --prefix frontend run build",
+    "agent:orchestrator:test": "node agents/00_ORCHESTRATOR/test.js",
+    "agent:database:test": "node agents/01_DATABASE/test.js",
+    "agent:trends:test": "node agents/02_TRENDS/test.js",
+    "agent:developer:test": "node agents/03_DEVELOPER/test.js",
+    "agent:qa:test": "node agents/04_QA/test.js",
+    "workflow:full": "node agents/00_ORCHESTRATOR/orchestrator.js --full",
+    "workflow:frontend-only": "node agents/00_ORCHESTRATOR/orchestrator.js --frontend-only",
+    "workflow:api-only": "node agents/00_ORCHESTRATOR/orchestrator.js --api-only",
+    "logs:view": "tail -f logs/agent-logs.json"
   }
 }

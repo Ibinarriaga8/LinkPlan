@@ -1,0 +1,81 @@
+{
+  "system": {
+    "name": "LINK & PLAN - IA Agents System",
+    "version": "1.0.0",
+    "environment": "development",
+    "timezone": "UTC",
+    "logLevel": "INFO"
+  },
+  "agents": {
+    "enabled": true,
+    "autoCoordinate": true,
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "agents": {
+      "ORCHESTRATOR": {
+        "id": "00_ORCHESTRATOR",
+        "path": "agents/00_ORCHESTRATOR",
+        "enabled": true,
+        "priority": 1,
+        "role": "Coordina ejecución de todos los agentes y resuelve dependencias",
+        "dependencies": []
+      },
+      "DATABASE": {
+        "id": "01_DATABASE",
+        "path": "agents/01_DATABASE",
+        "enabled": true,
+        "priority": 2,
+        "role": "Gestiona acceso a la BD Prisma/PostgreSQL (User, Venue, Plan, Reservation)",
+        "dependencies": ["ORCHESTRATOR"]
+      },
+      "TRENDS": {
+        "id": "02_TRENDS",
+        "path": "agents/02_TRENDS",
+        "enabled": true,
+        "priority": 2,
+        "role": "Analiza foodTags/activityTags de usuarios y tags de venues para detectar tendencias",
+        "dependencies": ["ORCHESTRATOR", "DATABASE"]
+      },
+      "DEVELOPER": {
+        "id": "03_DEVELOPER",
+        "path": "agents/03_DEVELOPER",
+        "enabled": true,
+        "priority": 3,
+        "role": "Genera endpoints Express y componentes React/Next para nuevas features",
+        "dependencies": ["ORCHESTRATOR", "DATABASE", "TRENDS"]
+      },
+      "QA": {
+        "id": "04_QA",
+        "path": "agents/04_QA",
+        "enabled": true,
+        "priority": 4,
+        "role": "Ejecuta lint, tests y comprobaciones de salud del backend",
+        "dependencies": ["DEVELOPER"]
+      }
+    }
+  },
+  "frontend": {
+    "framework": "next.js",
+    "version": "14",
+    "port": 3000,
+    "path": "frontend"
+  },
+  "backend": {
+    "framework": "express",
+    "version": "5",
+    "port": 4000,
+    "path": "backend",
+    "healthPath": "/health"
+  },
+  "database": {
+    "type": "postgresql",
+    "orm": "prisma",
+    "schema": "backend/prisma/schema.prisma",
+    "connectionEnv": "DATABASE_URL"
+  },
+  "monitoring": {
+    "enableAudit": true,
+    "enableMetrics": true,
+    "logDirectory": "logs"
+  }
+}
