@@ -9,8 +9,22 @@ const { COLORS } = require('./data/seedData');
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 4000;
+const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-app.use(cors({ origin: process.env.FRONTEND_URL?.split(',') ?? '*' }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('CORS origin not allowed'));
+    }
+  })
+);
 app.use(express.json());
 
 const userSchema = z.object({
