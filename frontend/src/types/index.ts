@@ -25,6 +25,7 @@ export type Plan = {
   date: string;
   pace: string;
   zone: string;
+  duration?: string;
   totalPeople: number;
   totalBudget: number;
   totalCost: number;
@@ -35,11 +36,32 @@ export type Plan = {
   afternoon: Venue;
 };
 
+export type StoredPlan = {
+  id: string;
+  date: string;
+  pace: string;
+  zone: string | null;
+  duration: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  budgetPerPerson: number;
+  totalBudget: number;
+  totalCost: number;
+  remainingBudget: number;
+  organizer: User;
+  organizerId: string;
+  participants: { user: User }[];
+  morningVenue: Venue;
+  lunchVenue: Venue;
+  afternoonVenue: Venue;
+  reservation: Reservation | null;
+  createdAt: string;
+};
+
 export type Reservation = {
   id: string;
   code: string;
   status: string;
-  plan: {
+  plan?: {
     totalCost: number;
     totalBudget: number;
     date: string;

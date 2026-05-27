@@ -253,4 +253,11 @@ function createAuthRouter(prisma) {
   return router;
 }
 
-module.exports = { createAuthRouter };
+function requireAuth(req, res, next) {
+  const session = readSession(req);
+  if (!session) return res.status(401).json({ message: 'Not authenticated' });
+  req.userId = session.sub;
+  next();
+}
+
+module.exports = { createAuthRouter, requireAuth };

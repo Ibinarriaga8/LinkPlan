@@ -6,7 +6,7 @@ const { z } = require('zod');
 const { PrismaClient, VenueType, ReservationStatus } = require('@prisma/client');
 const { generatePlan } = require('./services/planService');
 const { COLORS } = require('./data/seedData');
-const { createAuthRouter } = require('./auth');
+const { createAuthRouter, requireAuth } = require('./auth');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -132,6 +132,7 @@ app.post('/api/plans/generate', async (req, res, next) => {
         date: new Date(plan.date),
         zone: plan.zone || null,
         pace: plan.pace,
+        duration: plan.duration,
         budgetPerPerson: plan.budgetPerPerson,
         totalBudget: plan.totalBudget,
         totalCost: plan.totalCost,
@@ -149,6 +150,101 @@ app.post('/api/plans/generate', async (req, res, next) => {
     });
 
     res.status(201).json({ ...plan, id: createdPlan.id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const planInclude = {
+  organizer: true,
+  participants: { include: { user: true } },
+  morningVenue: true,
+  lunchVenue: true,
+  afternoonVenue: true,
+  reservation: true
+};
+
+app.get('/api/plans/mine', requireAuth, async (req, res, next) => {
+  try {
+    const plans = await prisma.plan.findMany({
+      where: { participants: { some: { userId: req.userId } } },
+      orderBy: { date: 'desc' },
+      include: planInclude
+    });
+    res.json(plans);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.patch('/api/plans/:id', requireAuth, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const plan = await prisma.plan.findUnique({
+      where: { id },
+      include: { participants: true }
+    });
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+    if (!plan.participants.some((p) => p.userId === req.userId)) {
+      return res.status(403).json({ message: 'Not a participant' });
+    }
+
+    const patch = z
+      .object({
+        date: z.string().optional(),
+        zone: z.string().optional().nullable(),
+        status: z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED']).optional()
+      })
+      .parse(req.body);
+
+    const updated = await prisma.plan.update({
+      where: { id },
+      data: {
+        ...(patch.date ? { date: new Date(patch.date) } : {}),
+        ...(patch.zone !== undefined ? { zone: patch.zone || null } : {}),
+        ...(patch.status ? { status: patch.status } : {})
+      },
+      include: planInclude
+    });
+
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/plans/:id/complete', requireAuth, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const plan = await prisma.plan.findUnique({
+      where: { id },
+      include: { participants: true }
+    });
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+    if (!plan.participants.some((p) => p.userId === req.userId)) {
+      return res.status(403).json({ message: 'Not a participant' });
+    }
+    const updated = await prisma.plan.update({
+      where: { id },
+      data: { status: 'COMPLETED' },
+      include: planInclude
+    });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/plans/:id', requireAuth, async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const plan = await prisma.plan.findUnique({ where: { id } });
+    if (!plan) return res.status(404).json({ message: 'Plan not found' });
+    if (plan.organizerId !== req.userId) {
+      return res.status(403).json({ message: 'Only the organizer can delete this plan' });
+    }
+    await prisma.plan.delete({ where: { id } });
+    res.status(204).end();
   } catch (err) {
     next(err);
   }

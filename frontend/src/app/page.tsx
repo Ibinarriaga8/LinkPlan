@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { TagSelector } from '@/components/TagSelector';
 import { LoginScreen } from '@/components/LoginScreen';
 import { useAuth } from '@/lib/authContext';
-import type { Plan, Reservation, User, Venue } from '@/types';
+import type { Plan, StoredPlan, User, Venue } from '@/types';
 
 const FOOD_TAGS = [
   'tradicional', 'tapas', 'español', 'italiano', 'pizza', 'pasta', 'asiatico', 'japones', 'sushi',
@@ -53,13 +53,15 @@ export default function Home() {
 
 function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<void> }) {
   const [users, setUsers] = useState<User[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [myPlans, setMyPlans] = useState<StoredPlan[]>([]);
   const [admin, setAdmin] = useState<{ restaurants: Venue[]; activities: Venue[]; stats: { plans: number; reservations: number } }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<'usuarios' | 'generar' | 'planes' | 'datos'>('usuarios');
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+  const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
   const [showModal, setShowModal] = useState(false);
 
   const [name, setName] = useState('');
@@ -79,10 +81,14 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     setLoading(true);
     setError(null);
     try {
-      const [usersData, reservationsData, adminData] = await Promise.all([api.users(), api.reservations(), api.adminData()]);
+      const [usersData, adminData, mine] = await Promise.all([
+        api.users(),
+        api.adminData(),
+        api.myPlans().catch(() => [])
+      ]);
       setUsers(usersData);
-      setReservations(reservationsData);
       setAdmin(adminData);
+      setMyPlans(mine);
       if (!organizerId) {
         const preferred = usersData.find((u) => u.id === authUser.id) ?? usersData[0];
         if (preferred) setOrganizerId(preferred.id);
@@ -129,7 +135,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     await refresh();
   }
 
-  async function createPlan() {
+  async function createPlan(opts?: { excludeIds?: string[] }) {
     if (!organizerId) {
       setError('Selecciona un organizador');
       return;
@@ -137,7 +143,16 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     setSaving(true);
     setError(null);
     try {
-      const nextPlan = await api.generatePlan({ organizerId, companionIds, budgetPerPerson: budget, date, zone });
+      const nextPlan = await api.generatePlan({
+        organizerId,
+        companionIds,
+        budgetPerPerson: budget,
+        date,
+        zone,
+        duration,
+        excludeIds: opts?.excludeIds,
+        variantSeed: opts?.excludeIds ? Date.now() % 1000 : 0
+      });
       setPlan(nextPlan);
       setActive('generar');
     } catch (err) {
@@ -145,6 +160,28 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     } finally {
       setSaving(false);
     }
+  }
+
+  async function regeneratePlan() {
+    if (!plan) return;
+    await createPlan({ excludeIds: [plan.morning.id, plan.lunch.id, plan.afternoon.id] });
+  }
+
+  async function deletePlan(id: string) {
+    if (!confirm('¿Borrar este plan?')) return;
+    await api.deletePlan(id);
+    if (expandedPlanId === id) setExpandedPlanId(null);
+    await refresh();
+  }
+
+  async function completePlan(id: string) {
+    await api.completePlan(id);
+    await refresh();
+  }
+
+  async function changePlanDate(id: string, newDate: string) {
+    await api.updatePlan(id, { date: newDate });
+    await refresh();
   }
 
   async function confirmPlan() {
@@ -269,6 +306,14 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                       ))}
                     </select>
                   </label>
+                  <label className="block text-sm">
+                    Duración
+                    <select className="mt-1 w-full rounded-lg border p-2" value={duration} onChange={(e) => setDuration(e.target.value as typeof duration)}>
+                      {DURATIONS.map((d) => (
+                        <option key={d.value} value={d.value}>{d.label}</option>
+                      ))}
+                    </select>
+                  </label>
                   <div>
                     <p className="mb-1 text-sm">Acompañantes</p>
                     <div className="flex flex-wrap gap-2">
@@ -295,12 +340,17 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                     <div className="space-y-3 text-sm">
                       <h3 className="display text-xl">Plan para {plan.allUsers.map((u) => u.name).join(' & ')}</h3>
                       <p>Coste: {plan.totalCost.toFixed(0)}€ / Presupuesto: {plan.totalBudget.toFixed(0)}€</p>
-                      <p>🌅 {plan.morning.name}</p>
-                      <p>🍽️ {plan.lunch.name}</p>
-                      <p>☀️ {plan.afternoon.name}</p>
-                      <button className="w-full rounded-lg bg-[#C4673A] px-4 py-2 font-medium text-white" onClick={() => void confirmPlan()}>
-                        Confirmar Reserva
-                      </button>
+                      <a className="block hover:underline" href={plan.morning.url} target="_blank" rel="noreferrer">🌅 {plan.morning.name}</a>
+                      <a className="block hover:underline" href={plan.lunch.url} target="_blank" rel="noreferrer">🍽️ {plan.lunch.name}</a>
+                      <a className="block hover:underline" href={plan.afternoon.url} target="_blank" rel="noreferrer">☀️ {plan.afternoon.name}</a>
+                      <div className="flex gap-2">
+                        <button className="flex-1 rounded-lg bg-[#C4673A] px-4 py-2 font-medium text-white" onClick={() => void confirmPlan()}>
+                          Confirmar Reserva
+                        </button>
+                        <button disabled={saving} className="rounded-lg border border-[#EAE4D9] px-4 py-2 text-sm hover:bg-[#FAF7F2] disabled:opacity-50" onClick={() => void regeneratePlan()}>
+                          Otra opción
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -310,13 +360,78 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             {active === 'planes' ? (
               <div className="space-y-3">
                 <h1 className="text-2xl font-semibold">Mis Planes y Reservas</h1>
-                {reservations.map((r) => (
-                  <article key={r.id} className="rounded-xl border border-[#EAE4D9] p-4 text-sm">
-                    <p className="display text-lg font-semibold">{r.code}</p>
-                    <p className="text-[#9A9390]">{new Date(r.plan.date).toLocaleDateString('es-ES')} · {r.plan.participants.map((p) => p.user.name).join(', ')}</p>
-                    <p className="mt-1">🌅 {r.plan.morningVenue.name} · 🍽️ {r.plan.lunchVenue.name} · ☀️ {r.plan.afternoonVenue.name}</p>
-                  </article>
-                ))}
+                {myPlans.length === 0 ? (
+                  <p className="text-sm text-[#9A9390]">Aún no tienes planes. Crea uno en la sección Generar Plan.</p>
+                ) : null}
+                {myPlans.map((p) => {
+                  const isExpanded = expandedPlanId === p.id;
+                  const isOrganizer = p.organizerId === authUser.id;
+                  const statusLabel = p.status === 'COMPLETED' ? '✅ Completado' : p.status === 'CANCELLED' ? '✖ Cancelado' : '🟢 Activo';
+                  return (
+                    <article key={p.id} className={`rounded-xl border p-4 text-sm transition ${isExpanded ? 'border-[#1A1714]' : 'border-[#EAE4D9]'} ${p.status === 'COMPLETED' ? 'opacity-70' : ''}`}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedPlanId(isExpanded ? null : p.id)}
+                        className="flex w-full items-center justify-between gap-3 text-left"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="display text-lg font-semibold">{new Date(p.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
+                          <p className="truncate text-xs text-[#9A9390]">{statusLabel} · {p.participants.map((pp) => pp.user.name).join(', ')}</p>
+                        </div>
+                        <span className="text-xs text-[#9A9390]">{isExpanded ? '▲' : '▼'}</span>
+                      </button>
+
+                      {isExpanded ? (
+                        <div className="mt-4 space-y-4 border-t border-[#EAE4D9] pt-4">
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {([['🌅', 'Mañana', p.morningVenue], ['🍽️', 'Comida', p.lunchVenue], ['☀️', 'Tarde', p.afternoonVenue]] as const).map(([emoji, label, venue]) => (
+                              <div key={label} className="rounded-lg bg-[#FAF7F2] p-3">
+                                <p className="text-xs uppercase tracking-wider text-[#9A9390]">{emoji} {label}</p>
+                                <a className="mt-1 block font-medium hover:underline" href={venue.url} target="_blank" rel="noreferrer">{venue.name} ↗</a>
+                                <p className="mt-1 text-xs text-[#9A9390]">{venue.zone} · {venue.price === 0 ? 'Gratis' : `${venue.price}€`}</p>
+                                <p className="text-xs text-[#9A9390]">{venue.schedule}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-[#6B5D4F]">
+                            <span>Coste total: <strong>{p.totalCost.toFixed(0)}€</strong> de {p.totalBudget.toFixed(0)}€</span>
+                            <span>Duración: <strong>{p.duration}</strong></span>
+                            <span>Zona: <strong>{p.zone || 'libre'}</strong></span>
+                            {p.reservation ? <span>Reserva: <strong>{p.reservation.code}</strong></span> : null}
+                          </div>
+
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            <label className="text-xs">
+                              Cambiar fecha
+                              <input
+                                type="date"
+                                defaultValue={p.date.slice(0, 10)}
+                                disabled={p.status !== 'ACTIVE'}
+                                className="mt-1 w-full rounded-lg border p-2 disabled:opacity-50"
+                                onBlur={(e) => {
+                                  if (e.target.value && e.target.value !== p.date.slice(0, 10)) void changePlanDate(p.id, e.target.value);
+                                }}
+                              />
+                            </label>
+                            <div className="flex flex-col justify-end gap-2">
+                              {p.status === 'ACTIVE' ? (
+                                <button className="rounded-lg bg-[#6B8F71] px-3 py-2 text-xs font-medium text-white" onClick={() => void completePlan(p.id)}>
+                                  Marcar como completado
+                                </button>
+                              ) : null}
+                              {isOrganizer ? (
+                                <button className="rounded-lg border border-red-300 px-3 py-2 text-xs text-red-600 hover:bg-red-50" onClick={() => void deletePlan(p.id)}>
+                                  Eliminar plan
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
               </div>
             ) : null}
 

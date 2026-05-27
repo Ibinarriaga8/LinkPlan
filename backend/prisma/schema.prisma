@@ -18,6 +18,12 @@ enum ReservationStatus {
   CANCELLED
 }
 
+enum PlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id           String            @id @default(cuid())
   name         String
@@ -74,6 +80,8 @@ model Plan {
   date             DateTime
   zone             String?
   pace             String
+  duration         String            @default("medio")
+  status           PlanStatus        @default(ACTIVE)
   budgetPerPerson  Float
   totalBudget      Float
   totalCost        Float
