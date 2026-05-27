@@ -28,6 +28,11 @@ export const api = {
   users: () => request<User[]>('/api/users'),
   createUser: (body: Pick<User, 'name' | 'foodTags' | 'activityTags' | 'pace'>) => request<User>('/api/users', { method: 'POST', body: JSON.stringify(body) }),
   deleteUser: (id: string) => request<void>(`/api/users/${id}`, { method: 'DELETE' }),
+  updateMe: (body: Partial<Pick<User, 'name' | 'description' | 'foodTags' | 'activityTags'>>) =>
+    request<User>('/api/users/me', { method: 'PATCH', body: JSON.stringify(body) }),
+  friends: () => request<User[]>('/api/friends'),
+  addFriend: (userId: string) => request<{ ok: true }>(`/api/friends/${userId}`, { method: 'POST' }),
+  removeFriend: (userId: string) => request<void>(`/api/friends/${userId}`, { method: 'DELETE' }),
   reservations: () => request<Reservation[]>('/api/reservations'),
   generatePlan: (body: {
     organizerId: string;

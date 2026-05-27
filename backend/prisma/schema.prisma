@@ -25,17 +25,33 @@ enum PlanStatus {
 }
 
 model User {
-  id           String            @id @default(cuid())
-  name         String
-  username     String?           @unique
-  color        String
-  foodTags     String[]          @default([])
-  activityTags String[]          @default([])
-  pace         String            @default("moderado")
-  createdAt    DateTime          @default(now())
-  plans        Plan[]            @relation("OrganizerPlans")
-  participants PlanParticipant[]
-  credentials  Credential[]
+  id              String            @id @default(cuid())
+  name            String
+  username        String?           @unique
+  description     String?
+  color           String
+  foodTags        String[]          @default([])
+  activityTags    String[]          @default([])
+  pace            String            @default("moderado")
+  createdAt       DateTime          @default(now())
+  plans           Plan[]            @relation("OrganizerPlans")
+  participants    PlanParticipant[]
+  credentials     Credential[]
+  friendsRequested Friendship[]     @relation("FriendRequester")
+  friendsReceived  Friendship[]     @relation("FriendReceiver")
+}
+
+model Friendship {
+  id           String   @id @default(cuid())
+  requesterId  String
+  receiverId   String
+  createdAt    DateTime @default(now())
+  requester    User     @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiver     User     @relation("FriendReceiver",  fields: [receiverId],  references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, receiverId])
+  @@index([requesterId])
+  @@index([receiverId])
 }
 
 model Credential {

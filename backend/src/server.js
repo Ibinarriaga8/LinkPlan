@@ -81,6 +81,75 @@ app.delete('/api/users/:id', async (req, res, next) => {
   }
 });
 
+const profileSchema = z.object({
+  name: z.string().min(1).max(60).optional(),
+  description: z.string().max(280).optional().nullable(),
+  foodTags: z.array(z.string()).optional(),
+  activityTags: z.array(z.string()).optional()
+});
+
+app.patch('/api/users/me', requireAuth, async (req, res, next) => {
+  try {
+    const patch = profileSchema.parse(req.body);
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        ...(patch.name !== undefined ? { name: patch.name } : {}),
+        ...(patch.description !== undefined ? { description: patch.description } : {}),
+        ...(patch.foodTags !== undefined ? { foodTags: patch.foodTags } : {}),
+        ...(patch.activityTags !== undefined ? { activityTags: patch.activityTags } : {})
+      }
+    });
+    res.json(user);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/friends', requireAuth, async (req, res, next) => {
+  try {
+    const links = await prisma.friendship.findMany({
+      where: { OR: [{ requesterId: req.userId }, { receiverId: req.userId }] },
+      include: { requester: true, receiver: true }
+    });
+    const friends = links.map((l) => (l.requesterId === req.userId ? l.receiver : l.requester));
+    res.json(friends);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/friends/:userId', requireAuth, async (req, res, next) => {
+  try {
+    const other = req.params.userId;
+    if (other === req.userId) return res.status(400).json({ message: 'Cannot befriend yourself' });
+    const target = await prisma.user.findUnique({ where: { id: other } });
+    if (!target) return res.status(404).json({ message: 'User not found' });
+    const [a, b] = [req.userId, other].sort();
+    await prisma.friendship.upsert({
+      where: { requesterId_receiverId: { requesterId: a, receiverId: b } },
+      update: {},
+      create: { requesterId: a, receiverId: b }
+    });
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/friends/:userId', requireAuth, async (req, res, next) => {
+  try {
+    const other = req.params.userId;
+    const [a, b] = [req.userId, other].sort();
+    await prisma.friendship.deleteMany({
+      where: { requesterId: a, receiverId: b }
+    });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get('/api/venues', async (req, res, next) => {
   try {
     const type = req.query.type === 'ACTIVITY' ? VenueType.ACTIVITY : req.query.type === 'RESTAURANT' ? VenueType.RESTAURANT : undefined;

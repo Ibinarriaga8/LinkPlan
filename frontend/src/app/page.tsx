@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { TagSelector } from '@/components/TagSelector';
 import { LoginScreen } from '@/components/LoginScreen';
+import { ProfilePanel } from '@/components/ProfilePanel';
 import { useAuth } from '@/lib/authContext';
 import type { Plan, StoredPlan, User, Venue } from '@/types';
 
@@ -58,7 +59,9 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [active, setActive] = useState<'usuarios' | 'generar' | 'planes' | 'datos'>('usuarios');
+  const [active, setActive] = useState<'usuarios' | 'generar' | 'planes' | 'perfil' | 'datos'>('usuarios');
+  const [friends, setFriends] = useState<User[]>([]);
+  const [me, setMe] = useState<User>(authUser);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
@@ -81,14 +84,18 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     setLoading(true);
     setError(null);
     try {
-      const [usersData, adminData, mine] = await Promise.all([
+      const [usersData, adminData, mine, friendsData] = await Promise.all([
         api.users(),
         api.adminData(),
-        api.myPlans().catch(() => [])
+        api.myPlans().catch(() => []),
+        api.friends().catch(() => [])
       ]);
       setUsers(usersData);
       setAdmin(adminData);
       setMyPlans(mine);
+      setFriends(friendsData);
+      const refreshedMe = usersData.find((u) => u.id === authUser.id);
+      if (refreshedMe) setMe(refreshedMe);
       if (!organizerId) {
         const preferred = usersData.find((u) => u.id === authUser.id) ?? usersData[0];
         if (preferred) setOrganizerId(preferred.id);
@@ -184,6 +191,20 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     await refresh();
   }
 
+  async function saveProfile(patch: Partial<Pick<User, 'name' | 'description' | 'foodTags' | 'activityTags'>>) {
+    const updated = await api.updateMe(patch);
+    setMe(updated);
+    await refresh();
+  }
+
+  async function toggleFriend(userId: string) {
+    const isFriend = friends.some((f) => f.id === userId);
+    if (isFriend) await api.removeFriend(userId);
+    else await api.addFriend(userId);
+    const next = await api.friends();
+    setFriends(next);
+  }
+
   async function confirmPlan() {
     if (!plan) return;
     setSaving(true);
@@ -206,6 +227,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             <p className="mt-1 text-xs text-[#9A9390]">Planificador de Ocio Compartido</p>
             <div className="mt-5 grid gap-2">
               {[
+                ['perfil', 'Mi Usuario'],
                 ['usuarios', 'Gestión de Usuarios'],
                 ['generar', 'Generar Plan'],
                 ['planes', 'Mis Planes y Reservas'],
@@ -433,6 +455,16 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                   );
                 })}
               </div>
+            ) : null}
+
+            {active === 'perfil' ? (
+              <ProfilePanel
+                me={me}
+                friends={friends}
+                allUsers={users}
+                onSave={(patch) => void saveProfile(patch)}
+                onToggleFriend={(uid) => void toggleFriend(uid)}
+              />
             ) : null}
 
             {active === 'datos' ? (

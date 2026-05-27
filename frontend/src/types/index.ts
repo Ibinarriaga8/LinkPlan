@@ -2,6 +2,7 @@ export type User = {
   id: string;
   name: string;
   username?: string | null;
+  description?: string | null;
   color: string;
   foodTags: string[];
   activityTags: string[];
