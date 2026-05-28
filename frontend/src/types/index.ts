@@ -25,6 +25,7 @@ export type TrendingCategories = {
 
 export type TrendingEvent = {
   id: string;
+  source?: string;
   title: string;
   category: string;
   description: string;

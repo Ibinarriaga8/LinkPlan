@@ -699,7 +699,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
               <div className="animate-in space-y-4">
                 <div>
                   <h1 className="text-2xl font-semibold">🔥 Noticias</h1>
-                  <p className="mt-0.5 text-sm text-[#5B6B82]">Lo que se cuece en Madrid ahora mismo · agenda oficial (datos.madrid.es)</p>
+                  <p className="mt-0.5 text-sm text-[#5B6B82]">Lo que se cuece en Madrid ahora mismo · vía esMadrid y Madrid Secreto</p>
                 </div>
 
                 {newsLoading ? (
@@ -731,6 +731,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">{ev.title}</p>
                           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#5B6B82]">
+                            {ev.source ? <span className="rounded-full bg-[#E3ECF8] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#0E4DA4]">{ev.source}</span> : null}
                             <span>{ev.category}</span>
                             {ev.date ? <span>· {new Date(ev.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}{ev.time ? ` · ${ev.time}` : ''}</span> : null}
                             {ev.venue ? <span className="truncate">· {ev.venue}</span> : null}
@@ -744,7 +745,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                         </div>
                       </a>
                     ))}
-                    <p className="pt-1 text-center text-[11px] text-[#8DA0BC]">Fuente: agenda abierta del Ayuntamiento de Madrid · se actualiza periódicamente</p>
+                    <p className="pt-1 text-center text-[11px] text-[#8DA0BC]">Fuentes: esMadrid (open data oficial) y Madrid Secreto (RSS) · se actualiza periódicamente</p>
                   </div>
                 )}
               </div>
