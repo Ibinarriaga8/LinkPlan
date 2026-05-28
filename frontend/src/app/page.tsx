@@ -15,7 +15,26 @@ const DURATIONS = [
   { value: 'medio', label: 'Medio · 2 planes (~2-4h)' },
   { value: 'largo', label: 'Largo · 3 planes (~4-6h)' }
 ] as const;
-const ZONES = ['', 'Centro', 'Retiro', 'Malasaña', 'Chamberí', 'La Latina'];
+const ZONES = [
+  '',
+  'Centro',
+  'Sol',
+  'Gran Vía',
+  'Malasaña',
+  'Chueca',
+  'Las Letras',
+  'Lavapiés',
+  'La Latina',
+  'Retiro',
+  'Salamanca',
+  'Chamberí',
+  'Chamartín',
+  'Arganzuela',
+  'Moncloa',
+  'Argüelles',
+  'Conde Duque',
+  'Tetuán'
+];
 
 type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'news';
 

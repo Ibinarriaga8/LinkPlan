@@ -4,6 +4,27 @@ const SOURCES = {
   esmadrid: 'https://www.esmadrid.com/opendata/agenda_v1_es.xml',
   madridsecreto: 'https://madridsecreto.co/feed/'
 };
+
+// Lista blanca: SOLO se muestran noticias cuyo enlace pertenezca a estas webs.
+// Cualquier item con URL de otro dominio se descarta (no se "inventan" webs).
+const ALLOWED_HOSTS = [
+  'feverup.com',
+  'madridsecreto.co',
+  'timeout.es',
+  'thefork.es',
+  'guiarepsol.com',
+  'esmadrid.com',
+  'entradas.com'
+];
+
+function hostAllowed(rawUrl) {
+  try {
+    const host = new URL(rawUrl).hostname.replace(/^www\./, '').toLowerCase();
+    return ALLOWED_HOSTS.some((domain) => host === domain || host.endsWith(`.${domain}`));
+  } catch {
+    return false;
+  }
+}
 const FETCH_TIMEOUT_MS = 9000;
 const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3h
 
@@ -184,7 +205,7 @@ async function loadItems() {
 
   const seen = new Set();
   items = items
-    .filter((e) => e.title && e.url && e.score >= 0)
+    .filter((e) => e.title && e.url && e.score >= 0 && hostAllowed(e.url))
     .filter((e) => {
       const key = e.title.toLowerCase();
       if (seen.has(key)) return false;
