@@ -73,7 +73,7 @@ export function LoginScreen() {
         <div className="p-8">
           <div className="mb-6 flex flex-col items-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Gatos y Cañas" className="h-16 w-auto object-contain" />
+            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-16 w-auto object-contain" />
             <p className="mt-2 text-xs uppercase tracking-[0.28em] text-[#2F6FBF]">Gatos y Cañas</p>
             <h1 className="mt-1 text-3xl font-semibold">Entra con tu huella</h1>
             <p className="mt-2 text-sm text-[#43577A]">
