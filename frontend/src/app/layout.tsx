@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/authContext';
 
 export const metadata: Metadata = {
-  title: 'LINK & PLAN',
+  title: 'Gatos y Cañas',
   description: 'Planificador estratégico de ocio compartido'
 };
 

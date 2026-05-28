@@ -35,11 +35,12 @@ export default function Home() {
   if (authLoading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center gap-6">
-        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[#1A1714] text-3xl text-[#FAF7F2] shadow-lg animate-pulse">
-          🤝
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white p-2 shadow-lg animate-pulse">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="Gatos y Cañas" className="h-full w-full object-contain" />
         </div>
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#B79B68]">LINK &amp; PLAN</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-[#B79B68]">GATOS Y CAÑAS</p>
           <p className="mt-1 display text-lg text-[#1A1714]">Preparando tu sesión…</p>
         </div>
         <div className="h-1 w-40 overflow-hidden rounded-full bg-[#EAE4D9]">
@@ -263,11 +264,17 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   return (
     <main className="min-h-screen p-6 lg:p-8">
       <div className="mx-auto max-w-7xl rounded-2xl border border-[#EAE4D9] bg-white shadow-sm">
+        <header className="flex flex-col items-center gap-1 border-b border-[#EAE4D9] px-6 py-5 text-center">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Gatos y Cañas" className="h-14 w-auto object-contain" />
+            <span className="display text-2xl font-semibold">Gatos y Cañas</span>
+          </div>
+          <p className="text-xs text-[#9A9390]">Planificador de Ocio Compartido</p>
+        </header>
         <div className="grid min-h-[80vh] grid-cols-1 lg:grid-cols-[260px_1fr]">
           <aside className="flex flex-col border-b border-[#EAE4D9] p-5 lg:border-b-0 lg:border-r">
-            <p className="display text-xl font-semibold">🤝 Link & Plan</p>
-            <p className="mt-1 text-xs text-[#9A9390]">Planificador de Ocio Compartido</p>
-            <div className="mt-5 grid gap-2">
+            <div className="grid gap-2">
               {[
                 ['perfil', 'Mi Usuario'],
                 ['usuarios', 'Gestión de Usuarios'],

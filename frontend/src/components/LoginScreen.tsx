@@ -70,7 +70,7 @@ export function LoginScreen() {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-[#EFE9E0] p-8">
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-widest text-[#B79B68]">LINK &amp; PLAN</p>
+          <p className="text-xs uppercase tracking-widest text-[#B79B68]">GATOS Y CAÑAS</p>
           <h1 className="text-3xl font-semibold mt-1">Entra con tu huella</h1>
           <p className="text-sm text-[#6B5D4F] mt-2">
             Sin contraseñas. Sin emails. Tu dispositivo guarda una clave única que solo se desbloquea con tu huella, Face ID o PIN.
