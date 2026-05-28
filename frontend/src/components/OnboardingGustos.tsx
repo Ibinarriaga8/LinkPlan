@@ -93,19 +93,19 @@ export function OnboardingGustos({
 
   return (
     <main className="min-h-screen px-4 py-10">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-[#EAE4D9] bg-white p-6 shadow-sm">
+      <div className="mx-auto max-w-2xl rounded-2xl border border-[#D8E3F2] bg-white p-6 shadow-sm">
         <div className="mb-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#B79B68]">Bienvenida, {me.name}</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-[#2F6FBF]">Bienvenida, {me.name}</p>
           <h1 className="display mt-1 text-3xl font-semibold">Cuéntanos tus gustos</h1>
-          <p className="mt-2 text-sm text-[#6B5D4F]">
+          <p className="mt-2 text-sm text-[#43577A]">
             Usaremos esto para proponerte planes a tu medida. Puedes cambiarlos cuando quieras desde tu perfil.
           </p>
         </div>
 
         {trending.length > 0 ? (
-          <section className="mb-6 rounded-xl border border-[#EAD9B7] bg-[#FBF4E6] p-4">
+          <section className="mb-6 rounded-xl border border-[#C7D8EE] bg-[#EAF1FB] p-4">
             <p className="text-sm font-medium">🔥 Tendencia en Madrid ahora</p>
-            <p className="mt-1 text-xs text-[#6B5D4F]">Las preseleccionamos por ti. Quita o añade lo que quieras.</p>
+            <p className="mt-1 text-xs text-[#43577A]">Las preseleccionamos por ti. Quita o añade lo que quieras.</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {trending.map((t) => {
                 const active = isTrendingSelected(t);
@@ -115,7 +115,7 @@ export function OnboardingGustos({
                     type="button"
                     onClick={() => toggleTrending(t)}
                     className={`rounded-full border px-3 py-1 text-sm transition ${
-                      active ? 'border-[#C4673A] bg-[#C4673A] text-white' : 'border-[#E0C99B] bg-white text-[#1A1714] hover:border-[#C4673A]'
+                      active ? 'border-[#0E4DA4] bg-[#0E4DA4] text-white' : 'border-[#C7D8EE] bg-white text-[#0A2E6E] hover:border-[#0E4DA4]'
                     }`}
                   >
                     {active ? '✓ ' : '+ '}
@@ -146,11 +146,11 @@ export function OnboardingGustos({
                 type="button"
                 onClick={() => setPace(opt.value)}
                 className={`rounded-xl border p-3 text-left text-sm transition ${
-                  pace === opt.value ? 'border-[#1A1714] bg-[#1A1714] text-white' : 'border-[#EAE4D9] hover:bg-[#FAF7F2]'
+                  pace === opt.value ? 'border-[#0A2E6E] bg-[#0A2E6E] text-white' : 'border-[#D8E3F2] hover:bg-[#EAF1FB]'
                 }`}
               >
                 <p className="font-medium">{opt.label}</p>
-                <p className={`text-xs ${pace === opt.value ? 'text-[#EAE4D9]' : 'text-[#9A9390]'}`}>{opt.hint}</p>
+                <p className={`text-xs ${pace === opt.value ? 'text-[#D8E3F2]' : 'text-[#5B6B82]'}`}>{opt.hint}</p>
               </button>
             ))}
           </div>
@@ -162,7 +162,7 @@ export function OnboardingGustos({
           type="button"
           disabled={busy || !valid}
           onClick={() => void handleSubmit()}
-          className="w-full rounded-xl bg-[#1A1714] px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
+          className="w-full rounded-xl bg-[#0A2E6E] px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
         >
           {busy ? 'Guardando…' : 'Empezar a planear'}
         </button>

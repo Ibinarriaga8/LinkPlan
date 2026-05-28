@@ -208,6 +208,43 @@ app.get('/api/trends/news', async (req, res, next) => {
   }
 });
 
+app.get('/api/favorites', requireAuth, async (req, res, next) => {
+  try {
+    const favorites = await prisma.favorite.findMany({
+      where: { userId: req.userId },
+      orderBy: { createdAt: 'desc' },
+      include: { venue: true }
+    });
+    res.json(favorites.map((f) => f.venue));
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/favorites/:venueId', requireAuth, async (req, res, next) => {
+  try {
+    const venue = await prisma.venue.findUnique({ where: { id: req.params.venueId } });
+    if (!venue) return res.status(404).json({ message: 'Venue not found' });
+    await prisma.favorite.upsert({
+      where: { userId_venueId: { userId: req.userId, venueId: req.params.venueId } },
+      update: {},
+      create: { userId: req.userId, venueId: req.params.venueId }
+    });
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/favorites/:venueId', requireAuth, async (req, res, next) => {
+  try {
+    await prisma.favorite.deleteMany({ where: { userId: req.userId, venueId: req.params.venueId } });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get('/api/venues', async (req, res, next) => {
   try {
     const type = req.query.type === 'ACTIVITY' ? VenueType.ACTIVITY : req.query.type === 'RESTAURANT' ? VenueType.RESTAURANT : undefined;

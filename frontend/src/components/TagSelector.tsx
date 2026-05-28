@@ -15,7 +15,7 @@ export function TagSelector({ tags, selected, onToggle }: TagSelectorProps) {
             key={tag}
             type="button"
             onClick={() => onToggle(tag)}
-            className={`rounded-full border px-3 py-1 text-sm transition ${active ? 'bg-[#1A1714] text-[#FAF7F2]' : 'border-[#D5CFC5] text-[#1A1714] hover:border-[#C4673A] hover:text-[#C4673A]'}`}
+            className={`rounded-full border px-3 py-1 text-sm transition ${active ? 'bg-[#0A2E6E] text-[#EAF1FB]' : 'border-[#C7D8EE] text-[#0A2E6E] hover:border-[#0E4DA4] hover:text-[#0E4DA4]'}`}
           >
             {tag}
           </button>

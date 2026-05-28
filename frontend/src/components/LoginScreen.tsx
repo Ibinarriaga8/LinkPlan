@@ -68,15 +68,15 @@ export function LoginScreen() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-[#EFE9E0] bg-white shadow-xl shadow-[#1A1714]/5">
-        <div className="h-1.5 bg-gradient-to-r from-[#C4673A] via-[#E0A258] to-[#6B8F71]" />
+      <div className="w-full max-w-md overflow-hidden rounded-3xl border border-[#D8E3F2] bg-white shadow-xl shadow-[#0A2E6E]/5">
+        <div className="h-1.5 bg-gradient-to-r from-[#0E4DA4] via-[#3B82D6] to-[#2E7D52]" />
         <div className="p-8">
           <div className="mb-6 flex flex-col items-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="Gatos y Cañas" className="h-16 w-auto object-contain" />
-            <p className="mt-2 text-xs uppercase tracking-[0.28em] text-[#B79B68]">Gatos y Cañas</p>
+            <p className="mt-2 text-xs uppercase tracking-[0.28em] text-[#2F6FBF]">Gatos y Cañas</p>
             <h1 className="mt-1 text-3xl font-semibold">Entra con tu huella</h1>
-            <p className="mt-2 text-sm text-[#6B5D4F]">
+            <p className="mt-2 text-sm text-[#43577A]">
               Sin contraseñas. Sin emails. Tu dispositivo guarda una clave única que solo se desbloquea con tu huella, Face ID o PIN.
             </p>
           </div>
@@ -91,20 +91,20 @@ export function LoginScreen() {
                 placeholder="ej: claudia"
                 autoFocus
                 autoComplete="username webauthn"
-                className="mt-1 w-full px-4 py-3 rounded-xl border border-[#EFE9E0] focus:outline-none focus:border-[#B79B68]"
+                className="mt-1 w-full px-4 py-3 rounded-xl border border-[#D8E3F2] focus:outline-none focus:border-[#2F6FBF]"
               />
             </label>
             <button
               type="submit"
               disabled={busy}
-              className="w-full px-4 py-3 rounded-xl bg-[#1A1714] text-white font-medium hover:bg-black disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-xl bg-[#0A2E6E] text-white font-medium hover:bg-black disabled:opacity-50"
             >
               {busy ? 'Conectando…' : 'Continuar'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
-            <p className="text-sm bg-[#FAF7F2] border border-[#EFE9E0] rounded-xl p-3">
+            <p className="text-sm bg-[#EAF1FB] border border-[#D8E3F2] rounded-xl p-3">
               <strong>{normalized}</strong> no existe todavía. Vamos a crear tu cuenta.
             </p>
             <label className="block">
@@ -114,13 +114,13 @@ export function LoginScreen() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Claudia"
                 autoFocus
-                className="mt-1 w-full px-4 py-3 rounded-xl border border-[#EFE9E0] focus:outline-none focus:border-[#B79B68]"
+                className="mt-1 w-full px-4 py-3 rounded-xl border border-[#D8E3F2] focus:outline-none focus:border-[#2F6FBF]"
               />
             </label>
             <button
               type="submit"
               disabled={busy}
-              className="w-full px-4 py-3 rounded-xl bg-[#1A1714] text-white font-medium hover:bg-black disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-xl bg-[#0A2E6E] text-white font-medium hover:bg-black disabled:opacity-50"
             >
               {busy ? 'Creando…' : 'Crear cuenta con passkey'}
             </button>
@@ -131,7 +131,7 @@ export function LoginScreen() {
                 setDisplayName('');
                 setError(null);
               }}
-              className="w-full px-4 py-2 text-sm text-[#6B5D4F] hover:text-[#1A1714]"
+              className="w-full px-4 py-2 text-sm text-[#43577A] hover:text-[#0A2E6E]"
             >
               Volver
             </button>

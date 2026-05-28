@@ -39,6 +39,7 @@ model User {
   credentials     Credential[]
   friendsRequested Friendship[]     @relation("FriendRequester")
   friendsReceived  Friendship[]     @relation("FriendReceiver")
+  favorites       Favorite[]
 }
 
 model Friendship {
@@ -92,6 +93,19 @@ model Venue {
   morningPlans   Plan[]    @relation("MorningVenue")
   lunchPlans     Plan[]    @relation("LunchVenue")
   afternoonPlans Plan[]    @relation("AfternoonVenue")
+  favoritedBy    Favorite[]
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  venueId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, venueId])
+  @@index([userId])
 }
 
 model Plan {

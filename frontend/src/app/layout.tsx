@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
-import { Fraunces, DM_Sans } from 'next/font/google';
+import { Jost, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/authContext';
 
-const display = Fraunces({
+// Jost es el clon libre de Futura; se usa como fallback web cuando el equipo no tiene Futura instalada.
+const display = Jost({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-display'
+  weight: ['500', '600', '700'],
+  variable: '--font-display-fallback'
 });
 const sans = DM_Sans({
   subsets: ['latin'],
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-screen bg-[#FAF6EE] text-[#1A1714] antialiased">
+      <body className="min-h-screen bg-[#F2F7FD] text-[#0A2E6E] antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

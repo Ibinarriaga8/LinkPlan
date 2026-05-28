@@ -52,6 +52,9 @@ export const api = {
   deleteUser: (id: string) => request<void>(`/api/users/${id}`, { method: 'DELETE' }),
   updateMe: (body: Partial<Pick<User, 'name' | 'description' | 'foodTags' | 'activityTags' | 'pace'>>) =>
     request<User>('/api/users/me', { method: 'PATCH', body: JSON.stringify(body) }),
+  favorites: () => request<Venue[]>('/api/favorites'),
+  addFavorite: (venueId: string) => request<{ ok: true }>(`/api/favorites/${venueId}`, { method: 'POST' }),
+  removeFavorite: (venueId: string) => request<void>(`/api/favorites/${venueId}`, { method: 'DELETE' }),
   friends: () => request<User[]>('/api/friends'),
   addFriend: (userId: string) => request<{ ok: true }>(`/api/friends/${userId}`, { method: 'POST' }),
   removeFriend: (userId: string) => request<void>(`/api/friends/${userId}`, { method: 'DELETE' }),
