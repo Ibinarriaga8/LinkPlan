@@ -22,27 +22,6 @@ const TIMES_OF_DAY = [
   { value: 'tarde', label: '☀️ Tarde · actividad + cena (20:00)' },
   { value: 'noche', label: '🌙 Noche · cena (20:00) + copas' }
 ] as const;
-const ZONES = [
-  '',
-  'Centro',
-  'Sol',
-  'Gran Vía',
-  'Malasaña',
-  'Chueca',
-  'Las Letras',
-  'Lavapiés',
-  'La Latina',
-  'Retiro',
-  'Salamanca',
-  'Chamberí',
-  'Chamartín',
-  'Arganzuela',
-  'Moncloa',
-  'Argüelles',
-  'Conde Duque',
-  'Tetuán'
-];
-
 type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'news' | 'admin';
 
 export default function Home() {
@@ -162,6 +141,12 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
 
   const companions = useMemo(() => friends, [friends]);
   const favoriteIds = useMemo(() => new Set(favorites.map((v) => v.id)), [favorites]);
+  // Solo ofrecemos zonas que realmente tienen sitios en la BBDD: así la zona
+  // elegida siempre se respeta y no acaba mandándote a la otra punta de Madrid.
+  const availableZones = useMemo(
+    () => Array.from(new Set(venues.map((v) => v.zone?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'es')),
+    [venues]
+  );
   // El campo permite vaciarse mientras se escribe (budget = NaN); aquí lo saneamos
   // al rango válido [10, 500] que exige el backend antes de enviarlo.
   const safeBudget = Number.isFinite(budget) && budget > 0 ? Math.min(500, Math.max(10, budget)) : 50;
@@ -507,8 +492,9 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                   <label className="block text-sm">
                     Zona
                     <select className={inputCls} value={zone} onChange={(e) => setZone(e.target.value)}>
-                      {ZONES.map((z) => (
-                        <option key={z} value={z}>{z || 'Sin preferencia'}</option>
+                      <option value="">Sin preferencia</option>
+                      {availableZones.map((z) => (
+                        <option key={z} value={z}>{z}</option>
                       ))}
                     </select>
                   </label>

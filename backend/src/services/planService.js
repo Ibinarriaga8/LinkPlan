@@ -202,9 +202,10 @@ function generatePlan({
   // si no hay ningún sitio de esa zona para un hueco concreto recurrimos al resto
   // (y lo marcamos para avisar al usuario). Sin zona, no se filtra nada.
   let zoneRespected = Boolean(zone);
+  const wantZone = (zone || '').trim().toLowerCase();
   const inZone = (list) => {
-    if (!zone) return list;
-    const matched = list.filter((v) => v.zone.includes(zone) || zone.includes(v.zone));
+    if (!wantZone) return list;
+    const matched = list.filter((v) => (v.zone || '').trim().toLowerCase().includes(wantZone));
     if (matched.length > 0) return matched;
     zoneRespected = false;
     return list;
