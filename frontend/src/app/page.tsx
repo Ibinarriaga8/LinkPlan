@@ -199,6 +199,18 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
 
   const companions = useMemo(() => friends, [friends]);
   const favoriteIds = useMemo(() => new Set(favorites.map((v) => v.id)), [favorites]);
+  // Rutas para el mapa: cada plan guardado se convierte en una secuencia de paradas.
+  const planRoutes = useMemo(
+    () =>
+      myPlans
+        .map((p) => ({
+          id: p.id,
+          label: new Date(p.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
+          stops: [p.morningVenue, p.lunchVenue, p.afternoonVenue].filter((x): x is Venue => Boolean(x))
+        }))
+        .filter((r) => r.stops.length >= 1),
+    [myPlans]
+  );
   // Todo plan necesita una comida (restaurante), así que solo ofrecemos zonas
   // que tienen al menos un restaurante: así la zona elegida SIEMPRE da un plan y
   // nunca acabas con "no hay sitios" ni te mandamos a la otra punta de Madrid.
@@ -485,10 +497,10 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     <div className="min-h-screen">
       {/* ---------------- Top bar (sticky, glass) ---------------- */}
       <header className="sticky top-0 z-40 glass shadow-soft">
-        <div className="mx-auto flex h-[68px] max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-[88px] max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button onClick={() => selectTab(isAdmin ? 'admin' : 'perfil')} className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-12 w-12 rounded-xl object-contain drop-shadow-[0_4px_10px_rgba(10,46,110,0.2)] sm:h-14 sm:w-14" />
+            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-16 w-16 rounded-xl object-contain drop-shadow-[0_4px_12px_rgba(10,46,110,0.25)] sm:h-20 sm:w-20" />
             <span className="display text-xl font-semibold tracking-tight text-navy sm:text-2xl">Gatos y Cañas</span>
           </button>
 
@@ -569,7 +581,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
       </header>
 
       {/* ---------------- Contenido ---------------- */}
-      <main ref={contentRef} className="app-scroll mx-auto w-full max-w-6xl scroll-mt-20 px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
+      <main ref={contentRef} className="app-scroll mx-auto w-full max-w-6xl scroll-mt-28 px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
         {error ? (
           <p className="mb-4 flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 p-3.5 text-sm font-medium text-red-700 animate-slide-down">
             <Icon name="x" className="h-4 w-4 shrink-0" /> {error}
@@ -993,7 +1005,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
         {active === 'mapa' ? (
           <div className="space-y-5">
             <SectionHeader eyebrow="Madrid a tu alcance" title="Mapa interactivo" subtitle="Explora todos los sitios sobre el mapa, agrupados por zona." icon="map" />
-            <MapView venues={venues} />
+            <MapView venues={venues} favoriteIds={favoriteIds} plans={planRoutes} />
           </div>
         ) : null}
 

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // Anuncio que aparece tras un tiempo usando la app y se puede cerrar.
-// delayMs es configurable (por defecto 2 minutos) para poder previsualizarlo.
-export function AdPopup({ delayMs = 120000 }: { delayMs?: number }) {
+// delayMs es configurable (por defecto 20 segundos).
+export function AdPopup({ delayMs = 20000 }: { delayMs?: number }) {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 

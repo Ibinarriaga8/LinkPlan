@@ -35,6 +35,8 @@ const ZONE_COORDS: Record<string, [number, number]> = {
 const CENTER: [number, number] = [40.4168, -3.7038];
 const COLORS = { RESTAURANT: '#C4673A', ACTIVITY: '#0E4DA4' } as const;
 
+export type PlanRoute = { id: string; label: string; stops: Venue[] };
+
 function hash(s: string) {
   let h = 2166136261;
   for (let i = 0; i < s.length; i += 1) {
@@ -48,7 +50,6 @@ function posFor(v: Venue): [number, number] | null {
   const key = (v.zone || '').trim().toLowerCase();
   let base: [number, number] | undefined = ZONE_COORDS[key];
   if (!base) {
-    // Coincidencia laxa por si la zona trae barrio extra ("Tetuán (Cuatro Caminos)")
     const hit = Object.keys(ZONE_COORDS).find((z) => key.includes(z) || z.includes(key));
     base = hit ? ZONE_COORDS[hit] : undefined;
   }
@@ -90,11 +91,31 @@ function esc(s: string) {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 }
 
-export function MapView({ venues }: { venues: Venue[] }) {
+function popupHtml(v: Venue, fav: boolean) {
+  const price = v.price === 0 ? 'Gratis' : `${v.price}€`;
+  const emoji = v.type === 'RESTAURANT' ? '🍽️' : '🎟️';
+  return `<div style="font-family:var(--font-sans),system-ui;min-width:170px">
+      <div style="font-weight:700;color:#15233d;font-size:14px">${fav ? '⭐ ' : ''}${emoji} ${esc(v.name)}</div>
+      <div style="color:#64748B;font-size:12px;margin-top:2px">${esc(v.zone || '')} · ${price}</div>
+      <a href="${esc(v.url)}" target="_blank" rel="noreferrer" style="display:inline-block;margin-top:8px;color:#0E4DA4;font-weight:600;font-size:12px;text-decoration:none">Ver web ↗</a>
+    </div>`;
+}
+
+export function MapView({
+  venues,
+  favoriteIds,
+  plans = []
+}: {
+  venues: Venue[];
+  favoriteIds?: Set<string>;
+  plans?: PlanRoute[];
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
-  const layerRef = useRef<any>(null);
+  const venueLayerRef = useRef<any>(null);
+  const routeLayerRef = useRef<any>(null);
   const [filter, setFilter] = useState<Filter>('all');
+  const [routeId, setRouteId] = useState<string | null>(plans[0]?.id ?? null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   const plottable = useMemo(() => venues.map((v) => ({ v, pos: posFor(v) })).filter((x) => x.pos), [venues]);
@@ -111,7 +132,8 @@ export function MapView({ venues }: { venues: Venue[] }) {
           attribution: '&copy; OpenStreetMap &copy; CARTO',
           maxZoom: 19
         }).addTo(map);
-        layerRef.current = L.layerGroup().addTo(map);
+        routeLayerRef.current = L.layerGroup().addTo(map); // ruta debajo
+        venueLayerRef.current = L.layerGroup().addTo(map); // marcadores encima
         mapRef.current = map;
         setStatus('ready');
         setTimeout(() => map.invalidateSize(), 200);
@@ -126,33 +148,65 @@ export function MapView({ venues }: { venues: Venue[] }) {
     };
   }, []);
 
-  // (Re)pinta los marcadores cuando cambian los datos o el filtro.
+  // (Re)pinta los marcadores de sitios. Favoritos -> estrella; resto -> punto.
   useEffect(() => {
     const w = window as unknown as { L?: any };
-    if (status !== 'ready' || !w.L || !layerRef.current) return;
+    if (status !== 'ready' || !w.L || !venueLayerRef.current) return;
     const L = w.L;
-    layerRef.current.clearLayers();
+    venueLayerRef.current.clearLayers();
     shown.forEach(({ v, pos }) => {
-      const marker = L.circleMarker(pos as [number, number], {
-        radius: 7,
-        weight: 2,
-        color: '#ffffff',
-        fillColor: COLORS[v.type],
-        fillOpacity: 0.95
-      });
-      const price = v.price === 0 ? 'Gratis' : `${v.price}€`;
-      const emoji = v.type === 'RESTAURANT' ? '🍽️' : '🎟️';
-      marker.bindPopup(
-        `<div style="font-family:var(--font-sans),system-ui;min-width:170px">
-          <div style="font-weight:700;color:#15233d;font-size:14px">${emoji} ${esc(v.name)}</div>
-          <div style="color:#64748B;font-size:12px;margin-top:2px">${esc(v.zone || '')} · ${price}</div>
-          <a href="${esc(v.url)}" target="_blank" rel="noreferrer" style="display:inline-block;margin-top:8px;color:#0E4DA4;font-weight:600;font-size:12px;text-decoration:none">Ver web ↗</a>
-        </div>`,
-        { closeButton: true }
-      );
-      marker.addTo(layerRef.current);
+      const fav = favoriteIds?.has(v.id) ?? false;
+      let marker: any;
+      if (fav) {
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid ${COLORS[v.type]};box-shadow:0 1px 5px rgba(0,0,0,.3);color:#F4B400;font-size:16px;line-height:1">★</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        });
+        marker = L.marker(pos as [number, number], { icon, zIndexOffset: 500 });
+      } else {
+        marker = L.circleMarker(pos as [number, number], {
+          radius: 7,
+          weight: 2,
+          color: '#ffffff',
+          fillColor: COLORS[v.type],
+          fillOpacity: 0.95
+        });
+      }
+      marker.bindPopup(popupHtml(v, fav), { closeButton: true });
+      marker.addTo(venueLayerRef.current);
     });
-  }, [shown, status]);
+  }, [shown, status, favoriteIds]);
+
+  // Dibuja la ruta del plan seleccionado (línea + paradas numeradas).
+  useEffect(() => {
+    const w = window as unknown as { L?: any };
+    if (status !== 'ready' || !w.L || !routeLayerRef.current || !mapRef.current) return;
+    const L = w.L;
+    routeLayerRef.current.clearLayers();
+    const route = plans.find((p) => p.id === routeId);
+    if (!route) return;
+    const pts: [number, number][] = [];
+    route.stops.forEach((s, i) => {
+      const p = posFor(s);
+      if (!p) return;
+      pts.push(p);
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#0E4DA4;color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 2px 6px rgba(10,46,110,.45)">${i + 1}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      L.marker(p, { icon, zIndexOffset: 1000 }).bindPopup(popupHtml(s, favoriteIds?.has(s.id) ?? false)).addTo(routeLayerRef.current);
+    });
+    if (pts.length >= 2) {
+      const line = L.polyline(pts, { color: '#0E4DA4', weight: 4, opacity: 0.9, dashArray: '1 9', lineCap: 'round' }).addTo(routeLayerRef.current);
+      mapRef.current.fitBounds(line.getBounds().pad(0.5));
+    } else if (pts.length === 1) {
+      mapRef.current.setView(pts[0], 15);
+    }
+  }, [routeId, plans, status, favoriteIds]);
 
   const counts = useMemo(
     () => ({
@@ -183,11 +237,37 @@ export function MapView({ venues }: { venues: Venue[] }) {
             {f.label}
           </button>
         ))}
-        <span className="ml-auto flex items-center gap-3 text-xs text-muted">
+        <span className="ml-auto flex flex-wrap items-center gap-3 text-xs text-muted">
           <span className="flex items-center gap-1.5"><span className="inline-block size-3 rounded-full" style={{ backgroundColor: COLORS.RESTAURANT }} /> Restaurante</span>
           <span className="flex items-center gap-1.5"><span className="inline-block size-3 rounded-full" style={{ backgroundColor: COLORS.ACTIVITY }} /> Plan</span>
+          <span className="flex items-center gap-1.5 text-[#F4B400]">★ <span className="text-muted">Favorito</span></span>
         </span>
       </div>
+
+      {plans.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-hair bg-white p-3 shadow-soft">
+          <span className="text-sm font-semibold text-ink">🗺️ Ruta de tu plan:</span>
+          <button
+            onClick={() => setRouteId(null)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 ${
+              routeId === null ? 'border-navy bg-navy text-white' : 'border-hair text-navy hover:border-royal'
+            }`}
+          >
+            Ninguna
+          </button>
+          {plans.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setRouteId(p.id)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 ${
+                routeId === p.id ? 'border-royal bg-royal text-white' : 'border-hair text-navy hover:border-royal'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="relative overflow-hidden rounded-3xl border border-hair shadow-card">
         <div ref={containerRef} className="h-[62vh] min-h-[380px] w-full bg-mist" />
@@ -204,7 +284,7 @@ export function MapView({ venues }: { venues: Venue[] }) {
         ) : null}
       </div>
       <p className="text-center text-[11px] text-muted">
-        Los sitios se agrupan por zona sobre el mapa de Madrid. Pulsa un punto para ver el detalle y su web.
+        Los sitios se agrupan por zona sobre el mapa de Madrid. Tus favoritos salen con ⭐. Pulsa un punto para ver el detalle.
       </p>
     </div>
   );
