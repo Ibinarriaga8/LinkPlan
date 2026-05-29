@@ -4,15 +4,26 @@
 
 :root {
   color-scheme: light;
+  --font-display: "Fraunces";
+  --font-sans: "DM Sans";
+  /* Alturas de las barras flotantes (móvil) para reservar espacio al contenido */
+  --topbar-h: 60px;
+  --bottombar-h: 76px;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background-color: #eef4fc;
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #15233d;
+  background-color: #edf3fb;
   background-image:
-    radial-gradient(1200px 600px at 110% -10%, rgba(20, 87, 168, 0.18), transparent 60%),
-    radial-gradient(1000px 520px at -10% 0%, rgba(59, 130, 214, 0.14), transparent 55%),
-    radial-gradient(900px 700px at 50% 120%, rgba(10, 46, 110, 0.12), transparent 60%);
+    radial-gradient(1100px 560px at 110% -8%, rgba(20, 87, 168, 0.16), transparent 60%),
+    radial-gradient(900px 520px at -10% 4%, rgba(59, 130, 214, 0.13), transparent 55%),
+    radial-gradient(1000px 760px at 50% 118%, rgba(10, 46, 110, 0.12), transparent 60%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -23,48 +34,147 @@ h1,
 h2,
 h3,
 .display {
-  font-family: var(--font-display), 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display), "Fraunces", Georgia, "Times New Roman", serif;
   font-weight: 600;
   font-optical-sizing: auto;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.018em;
 }
 
+/* ---------- Superficies ---------- */
+.glass {
+  background-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(1.6) blur(18px);
+  -webkit-backdrop-filter: saturate(1.6) blur(18px);
+}
+.glass-strong {
+  background-color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(1.7) blur(22px);
+  -webkit-backdrop-filter: saturate(1.7) blur(22px);
+}
+.card {
+  background: #fff;
+  border: 1px solid #e4ecf7;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 2px rgba(10, 46, 110, 0.04), 0 14px 34px -22px rgba(10, 46, 110, 0.28);
+}
+
+/* ---------- Texto utilidades ---------- */
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #2f6fbf;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Botón con brillo ---------- */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: -1;
+}
+.btn-shine:hover::after {
+  transform: translateX(130%);
+}
+
+/* ---------- Animación escalonada de hijos ---------- */
+.stagger > * {
+  animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.07s; }
+.stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger > *:nth-child(4) { animation-delay: 0.17s; }
+.stagger > *:nth-child(5) { animation-delay: 0.22s; }
+.stagger > *:nth-child(6) { animation-delay: 0.27s; }
+.stagger > *:nth-child(7) { animation-delay: 0.32s; }
+.stagger > *:nth-child(8) { animation-delay: 0.37s; }
+.stagger > *:nth-child(n + 9) { animation-delay: 0.42s; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* compat con el nombre antiguo */
+.animate-in {
+  animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- Loader (login splash) ---------- */
 @keyframes loader {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(200%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 .animate-loader {
   animation: loader 1.4s ease-in-out infinite;
 }
 
-@keyframes floatUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ---------- Skeleton shimmer ---------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e9f0fa;
 }
-.animate-in {
-  animation: floatUp 0.35s ease-out both;
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* Scrollbar sutil para zonas con overflow */
-.thin-scroll::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ---------- Scrollbar sutil ---------- */
+.thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #c2d4ee; border-radius: 999px; }
+.thin-scroll { scrollbar-width: thin; scrollbar-color: #c2d4ee transparent; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ---------- Safe areas (notch / barra inferior móvil) ---------- */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.bottom-safe { bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+
+/* Reserva de espacio para que el contenido no quede bajo las barras flotantes (móvil) */
+.app-scroll {
+  padding-bottom: calc(var(--bottombar-h) + env(safe-area-inset-bottom) + 1.5rem);
 }
-.thin-scroll::-webkit-scrollbar-thumb {
-  background: #c2d4ee;
-  border-radius: 999px;
+@media (min-width: 1024px) {
+  .app-scroll { padding-bottom: 2.5rem; }
 }
-.thin-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: #c2d4ee transparent;
+
+/* ---------- Inputs select nativos: que la flecha respete el tema ---------- */
+select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230E4DA4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 2.5rem;
+}
+
+/* ---------- Respeto a quien prefiere menos movimiento ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

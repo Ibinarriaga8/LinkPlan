@@ -41,54 +41,57 @@ export function ProfilePanel({ me, onSave, onLogout }: { me: User; onSave: (patc
     JSON.stringify([...foodTags].sort()) !== JSON.stringify([...me.foodTags].sort()) ||
     JSON.stringify([...activityTags].sort()) !== JSON.stringify([...me.activityTags].sort());
 
-  return (
-    <div className="animate-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Mi perfil</h1>
-        <p className="mt-1 text-sm text-[#5B6B82]">Configura cómo te ven los demás y elige tus gustos para que los planes te queden a medida.</p>
-      </div>
+  const inputCls =
+    'mt-1.5 w-full rounded-2xl border border-hair bg-white px-3.5 py-3 text-[15px] text-ink outline-none transition placeholder:text-muted/70 focus:border-royal focus:ring-4 focus:ring-royal/10';
 
-      <section className="rounded-2xl border border-[#D8E3F2] bg-white p-5">
-        <div className="mb-4 flex items-center gap-4">
+  return (
+    <div className="space-y-6">
+      {/* Hero perfil con degradado de marca */}
+      <section className="relative overflow-hidden rounded-4xl border border-hair bg-brand-deep p-6 text-white shadow-card animate-fade-up sm:p-8">
+        <span className="pointer-events-none absolute -right-10 -top-10 size-44 rounded-full bg-white/10 blur-2xl animate-glow-pulse" />
+        <div className="relative flex items-center gap-4">
           <div
-            className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-semibold text-white shadow-sm"
+            className="grid size-16 shrink-0 place-items-center rounded-3xl text-2xl font-bold text-white shadow-glow ring-4 ring-white/25"
             style={{ backgroundColor: me.color }}
           >
             {me.name.slice(0, 1).toUpperCase()}
           </div>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-[#2F6FBF]">@{me.username}</p>
-            <p className="display text-xl">{name || 'Sin nombre'}</p>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">@{me.username}</p>
+            <p className="display truncate text-2xl sm:text-3xl">{name || 'Sin nombre'}</p>
+            {me.description ? <p className="mt-0.5 line-clamp-2 text-sm text-white/80">{me.description}</p> : null}
           </div>
         </div>
+      </section>
 
-        <label className="block text-sm">
+      <section className="card p-5 sm:p-6">
+        <label className="block text-sm font-medium text-ink/80">
           Nombre
-          <input className="mt-1 w-full rounded-xl border border-[#CFE0F3] p-2.5 outline-none transition focus:border-[#0E4DA4] focus:ring-2 focus:ring-[#0E4DA4]/15" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
-        <label className="mt-3 block text-sm">
+        <label className="mt-4 block text-sm font-medium text-ink/80">
           Descripción
           <textarea
-            className="mt-1 w-full rounded-xl border border-[#CFE0F3] p-2.5 outline-none transition focus:border-[#0E4DA4] focus:ring-2 focus:ring-[#0E4DA4]/15"
+            className={inputCls}
             rows={3}
             placeholder="Cuéntate en una frase…"
             maxLength={280}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <p className="mt-1 text-right text-xs text-[#5B6B82]">{description.length}/280</p>
+          <span className="mt-1 block text-right text-xs text-muted">{description.length}/280</span>
         </label>
 
-        <p className="mt-4 mb-1 text-sm font-medium">Comida</p>
+        <p className="mb-2 mt-6 text-sm font-semibold text-ink">🍽️ Comida</p>
         <TagSelector tags={FOOD_TAGS} selected={foodTags} onToggle={(t) => toggle(t, foodTags, setFoodTags)} />
 
-        <p className="mt-4 mb-1 text-sm font-medium">Actividades</p>
+        <p className="mb-2 mt-6 text-sm font-semibold text-ink">🎟️ Actividades</p>
         <TagSelector tags={ACTIVITY_TAGS} selected={activityTags} onToggle={(t) => toggle(t, activityTags, setActivityTags)} />
 
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           {dirty ? (
             <button
-              className="rounded-lg border border-[#D8E3F2] px-4 py-2 text-sm"
+              className="rounded-2xl border border-hair px-4 py-2.5 text-sm font-medium transition hover:bg-mist active:scale-95"
               onClick={() => {
                 setName(me.name);
                 setDescription(me.description ?? '');
@@ -102,17 +105,17 @@ export function ProfilePanel({ me, onSave, onLogout }: { me: User; onSave: (patc
           <button
             disabled={!dirty}
             onClick={() => onSave({ name, description: description || null, foodTags, activityTags })}
-            className="rounded-lg bg-[#0E4DA4] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-2xl bg-royal px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:brightness-110 active:scale-95 disabled:opacity-40"
           >
             Guardar cambios
           </button>
         </div>
       </section>
 
-      <div className="flex justify-end border-t border-[#D8E3F2] pt-4">
+      <div className="flex justify-end border-t border-hair pt-4">
         <button
           onClick={() => void onLogout()}
-          className="rounded-lg border border-[#D8E3F2] px-4 py-2 text-sm text-[#43577A] transition hover:bg-[#EAF1FB] hover:text-[#0E4DA4]"
+          className="rounded-2xl border border-hair px-4 py-2.5 text-sm font-medium text-[#43577A] transition hover:bg-mist hover:text-royal active:scale-95"
         >
           Cerrar sesión
         </button>

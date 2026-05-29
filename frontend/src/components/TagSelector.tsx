@@ -15,8 +15,14 @@ export function TagSelector({ tags, selected, onToggle }: TagSelectorProps) {
             key={tag}
             type="button"
             onClick={() => onToggle(tag)}
-            className={`rounded-full border px-3 py-1 text-sm transition ${active ? 'bg-[#0A2E6E] text-[#EAF1FB]' : 'border-[#C7D8EE] text-[#0A2E6E] hover:border-[#0E4DA4] hover:text-[#0E4DA4]'}`}
+            aria-pressed={active}
+            className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition active:scale-95 ${
+              active
+                ? 'border-navy bg-navy text-white shadow-soft'
+                : 'border-hair bg-white text-navy hover:border-royal hover:text-royal'
+            }`}
           >
+            {active ? '✓ ' : ''}
             {tag}
           </button>
         );
