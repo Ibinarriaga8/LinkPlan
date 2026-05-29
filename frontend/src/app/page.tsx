@@ -7,6 +7,7 @@ import { ProfilePanel } from '@/components/ProfilePanel';
 import { FriendsPanel } from '@/components/FriendsPanel';
 import { OnboardingGustos } from '@/components/OnboardingGustos';
 import { AdPopup } from '@/components/AdPopup';
+import { MapView } from '@/components/MapView';
 import { useAuth } from '@/lib/authContext';
 import { ADMIN_USER_ID, getStoredAdminToken, setStoredAdminToken } from '@/lib/admin';
 import { buildTimeline, formatDuration } from '@/lib/timeline';
@@ -23,7 +24,7 @@ const TIMES_OF_DAY = [
   { value: 'tarde', label: '☀️ Tarde · actividad + cena (20:00)' },
   { value: 'noche', label: '🌙 Noche · cena (20:00) + copas' }
 ] as const;
-type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'news' | 'admin';
+type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'mapa' | 'news' | 'admin';
 
 // ---------------------------------------------------------------------------
 // Iconografía (line-icons, currentColor) — capa puramente visual.
@@ -475,6 +476,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     { key: 'generar', label: 'Crear', icon: 'sparkles' },
     { key: 'planes', label: 'Planes', icon: 'calendar' },
     { key: 'sitios', label: 'Sitios', icon: 'pin' },
+    { key: 'mapa', label: 'Mapa', icon: 'map' },
     { key: 'news', label: 'Noticias', icon: 'flame' }
   ];
   const initial = (authUser.name?.slice(0, 1) || '?').toUpperCase();
@@ -512,15 +514,26 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
 
           <div className="ml-auto flex items-center gap-2">
             {!isAdmin ? (
-              <button
-                onClick={() => selectTab('news')}
-                aria-label="Noticias"
-                className={`grid size-10 place-items-center rounded-full transition active:scale-90 lg:hidden ${
-                  active === 'news' ? 'bg-brand text-white shadow-glow' : 'text-royal hover:bg-mist'
-                }`}
-              >
-                <Icon name="flame" />
-              </button>
+              <>
+                <button
+                  onClick={() => selectTab('mapa')}
+                  aria-label="Mapa"
+                  className={`grid size-10 place-items-center rounded-full transition active:scale-90 lg:hidden ${
+                    active === 'mapa' ? 'bg-brand text-white shadow-glow' : 'text-royal hover:bg-mist'
+                  }`}
+                >
+                  <Icon name="map" />
+                </button>
+                <button
+                  onClick={() => selectTab('news')}
+                  aria-label="Noticias"
+                  className={`grid size-10 place-items-center rounded-full transition active:scale-90 lg:hidden ${
+                    active === 'news' ? 'bg-brand text-white shadow-glow' : 'text-royal hover:bg-mist'
+                  }`}
+                >
+                  <Icon name="flame" />
+                </button>
+              </>
             ) : null}
             <button
               onClick={() => selectTab(isAdmin ? 'admin' : 'perfil')}
@@ -974,6 +987,13 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                 </div>
               )}
             </section>
+          </div>
+        ) : null}
+
+        {active === 'mapa' ? (
+          <div className="space-y-5">
+            <SectionHeader eyebrow="Madrid a tu alcance" title="Mapa interactivo" subtitle="Explora todos los sitios sobre el mapa, agrupados por zona." icon="map" />
+            <MapView venues={venues} />
           </div>
         ) : null}
 
