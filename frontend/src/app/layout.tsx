@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-screen bg-[#FAF6EE] text-[#1A1714] antialiased">
+      <body className="min-h-screen text-[#1C2B45] antialiased">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

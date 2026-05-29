@@ -8,21 +8,25 @@
 
 body {
   font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background-color: #f2f7fd;
+  background-color: #eef4fc;
   background-image:
-    radial-gradient(1200px 600px at 110% -10%, rgba(20, 87, 168, 0.16), transparent 60%),
-    radial-gradient(1000px 500px at -10% 0%, rgba(59, 130, 214, 0.12), transparent 55%),
-    radial-gradient(900px 700px at 50% 120%, rgba(10, 46, 110, 0.10), transparent 60%);
+    radial-gradient(1200px 600px at 110% -10%, rgba(20, 87, 168, 0.18), transparent 60%),
+    radial-gradient(1000px 520px at -10% 0%, rgba(59, 130, 214, 0.14), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, rgba(10, 46, 110, 0.12), transparent 60%);
   background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
 h2,
 h3,
 .display {
-  font-family: 'Futura', 'Futura PT', var(--font-display-fallback), 'Century Gothic', sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display), 'Fraunces', Georgia, 'Times New Roman', serif;
+  font-weight: 600;
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;
 }
 
 @keyframes loader {
@@ -57,6 +61,10 @@ h3,
   height: 8px;
 }
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: #e2d6c2;
+  background: #c2d4ee;
   border-radius: 999px;
+}
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #c2d4ee transparent;
 }

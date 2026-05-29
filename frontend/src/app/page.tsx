@@ -323,17 +323,21 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   return (
     <main className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-[#D8E3F2] bg-white/95 shadow-xl shadow-[#0A2E6E]/10 backdrop-blur">
-        <header className="relative flex flex-col items-center gap-2 border-b border-[#D8E3F2] bg-gradient-to-b from-[#EAF1FB] to-white px-6 py-7 text-center">
-          <div className="flex items-center gap-4">
+        <header className="relative flex flex-col items-center gap-3 border-b border-[#D8E3F2] bg-gradient-to-b from-[#EAF1FB] via-[#F3F8FD] to-white px-4 py-6 text-center sm:px-6 sm:py-8">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-[10.5rem] w-auto object-contain drop-shadow-sm" />
-            <span className="display text-4xl font-bold tracking-wide text-[#0A2E6E]">Gatos y Cañas</span>
+            <img
+              src="/logo_vector.png"
+              alt="Gatos y Cañas"
+              className="h-20 w-auto max-w-[68vw] object-contain drop-shadow-[0_6px_16px_rgba(10,46,110,0.18)] sm:h-28 lg:h-32"
+            />
+            <span className="display text-3xl font-semibold tracking-tight text-[#0A2E6E] sm:text-4xl lg:text-5xl">Gatos y Cañas</span>
           </div>
           <span className="absolute inset-x-0 bottom-0 h-1.5 bg-gradient-to-r from-[#0E4DA4] via-[#3B82D6] to-[#0A2E6E]" />
         </header>
         <div className="grid min-h-[80vh] grid-cols-1 lg:grid-cols-[264px_1fr]">
-          <aside className="flex flex-col border-b border-[#D8E3F2] bg-[#F5F9FE] p-5 lg:border-b-0 lg:border-r">
-            <div className="grid gap-1.5">
+          <aside className="flex flex-col border-b border-[#D8E3F2] bg-[#F5F9FE]/80 p-4 lg:border-b-0 lg:border-r lg:p-5">
+            <div className="flex gap-2 overflow-x-auto pb-1 thin-scroll lg:grid lg:gap-1.5 lg:overflow-visible lg:pb-0">
               {([
                 ['perfil', 'Mi perfil', '🐱'],
                 ['amigos', 'Mis amigos', '👥'],
@@ -344,9 +348,9 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
               ] as const).map(([key, label, icon]) => (
                 <button
                   key={key}
-                  className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                  className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition ${
                     active === key
-                      ? 'bg-[#0A2E6E] text-white shadow-sm shadow-[#0A2E6E]/30'
+                      ? 'bg-[#0A2E6E] text-white shadow-md shadow-[#0A2E6E]/25'
                       : 'text-[#43577A] hover:bg-[#E3ECF8]'
                   }`}
                   onClick={() => selectTab(key)}
@@ -378,7 +382,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             </div>
           </aside>
 
-          <section ref={contentRef} className="scroll-mt-4 p-6">
+          <section ref={contentRef} className="scroll-mt-4 p-4 sm:p-6">
             {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
             {loading ? <p className="text-sm text-[#5B6B82]">Cargando datos...</p> : null}
 
