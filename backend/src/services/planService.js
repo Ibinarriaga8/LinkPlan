@@ -198,17 +198,16 @@ function generatePlan({
     return ranked;
   };
 
-  // La zona es un filtro duro: si la eliges, el plan se queda en esa zona. Solo
-  // si no hay ningún sitio de esa zona para un hueco concreto recurrimos al resto
-  // (y lo marcamos para avisar al usuario). Sin zona, no se filtra nada.
-  let zoneRespected = Boolean(zone);
+  // La zona es un filtro DURO y total: si la eliges, TODOS los sitios del plan
+  // están exactamente en esa zona. Nunca mezclamos zonas ni te mandamos a la otra
+  // punta de Madrid. Si un hueco no tiene sitio en la zona, se queda vacío antes
+  // que rellenarse con otra zona; si ni la comida cabe, avisamos (más abajo).
+  // Sin zona, no se filtra nada.
   const wantZone = (zone || '').trim().toLowerCase();
+  const zoneRespected = true; // garantizado: jamás salimos de la zona elegida
   const inZone = (list) => {
     if (!wantZone) return list;
-    const matched = list.filter((v) => (v.zone || '').trim().toLowerCase().includes(wantZone));
-    if (matched.length > 0) return matched;
-    zoneRespected = false;
-    return list;
+    return list.filter((v) => (v.zone || '').trim().toLowerCase() === wantZone);
   };
 
   const { morning: wantsMorning, afternoon: wantsAfternoon } = slotsForDuration(duration);
@@ -217,6 +216,9 @@ function generatePlan({
   const candidateAfternoon = wantsAfternoon ? inZone(rankActivities(windows.afternoon)).slice(0, 14) : [];
 
   if (candidateLunches.length === 0) {
+    if (wantZone) {
+      throw new Error(`No hay sitios en la zona "${zone}" para ese momento del día con ese presupuesto. Prueba otra zona, otra hora o sube el presupuesto.`);
+    }
     throw new Error('No hay restaurantes abiertos para ese momento del día con ese presupuesto. Prueba otra hora, zona o sube el presupuesto.');
   }
 

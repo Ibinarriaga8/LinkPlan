@@ -155,18 +155,37 @@ test('si elijo Tetuán, el plan se queda en Tetuán (no me manda a Retiro)', () 
   assert.equal(plan.zoneRespected, true);
 });
 
-test('si la zona no tiene sitios, hace fallback y lo avisa (zoneRespected=false)', () => {
+test('si la zona no tiene sitios, NO me manda a otra zona: avisa con un error', () => {
+  assert.throws(
+    () =>
+      generatePlan({
+        organizer,
+        companions: [],
+        budgetPerPerson: 80,
+        date: '2026-05-29',
+        zone: 'Moncloa', // ninguna venue en esa zona
+        timeOfDay: 'mediodia',
+        duration: 'corto',
+        restaurants: zoneRestaurants,
+        activities: zoneActivities
+      }),
+    /Moncloa/
+  );
+});
+
+test('zona con restaurante pero sin actividades: comida en zona, nunca actividad de otra zona', () => {
   const plan = generatePlan({
     organizer,
     companions: [],
     budgetPerPerson: 80,
     date: '2026-05-29',
-    zone: 'Moncloa', // ninguna venue en esa zona
+    zone: 'Tetuán',
     timeOfDay: 'mediodia',
-    duration: 'corto',
+    duration: 'medio', // pediría actividad + comida
     restaurants: zoneRestaurants,
-    activities: zoneActivities
+    activities: [{ id: 'ar', name: 'Act Retiro', tags: ['arte'], zone: 'Retiro', price: 0, available: true, schedule: '10:00-20:00' }]
   });
-  assert.ok(plan.lunch);
-  assert.equal(plan.zoneRespected, false);
+  assert.equal(plan.lunch.zone, 'Tetuán');
+  assert.equal(plan.morning, null); // no hay actividad en Tetuán → hueco vacío, no se cuela Retiro
+  assert.equal(plan.zoneRespected, true);
 });
