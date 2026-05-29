@@ -482,11 +482,11 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     <div className="min-h-screen">
       {/* ---------------- Top bar (sticky, glass) ---------------- */}
       <header className="sticky top-0 z-40 glass shadow-soft">
-        <div className="mx-auto flex h-[60px] max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-[68px] max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button onClick={() => selectTab(isAdmin ? 'admin' : 'perfil')} className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-9 w-9 rounded-xl object-contain drop-shadow-[0_4px_10px_rgba(10,46,110,0.2)]" />
-            <span className="display text-lg font-semibold tracking-tight text-navy">Gatos y Cañas</span>
+            <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-12 w-12 rounded-xl object-contain drop-shadow-[0_4px_10px_rgba(10,46,110,0.2)] sm:h-14 sm:w-14" />
+            <span className="display text-xl font-semibold tracking-tight text-navy sm:text-2xl">Gatos y Cañas</span>
           </button>
 
           {/* Nav horizontal — solo desktop */}
@@ -981,10 +981,18 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             <SectionHeader eyebrow="Lo que se cuece" title="Noticias" subtitle="Lo que se cuece en Madrid ahora mismo · vía esMadrid y Madrid Secreto" icon="flame" />
 
             {newsLoading ? (
-              <div className="space-y-2.5 stagger">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="skeleton h-[68px] rounded-3xl" />
-                ))}
+              <div className="space-y-2.5">
+                <div className="card flex items-center gap-3 p-4">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-mist text-royal animate-pulse">
+                    <Icon name="flame" />
+                  </span>
+                  <p className="text-sm font-medium text-muted">Buscando los planazos del momento…</p>
+                </div>
+                <div className="space-y-2.5 stagger">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="skeleton h-[68px] rounded-3xl" />
+                  ))}
+                </div>
               </div>
             ) : news.length === 0 ? (
               <div className="card flex flex-col items-center p-10 text-center">

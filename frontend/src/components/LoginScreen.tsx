@@ -106,7 +106,7 @@ export function LoginScreen() {
           {/* Cabecera de marca */}
           <div className="azulejo-texture relative overflow-hidden bg-brand-deep px-8 pb-7 pt-9 text-center text-white">
             <span className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-2xl" />
-            <div className="relative mx-auto flex size-16 items-center justify-center rounded-3xl bg-white/95 p-2 shadow-lg">
+            <div className="relative mx-auto flex size-20 items-center justify-center rounded-3xl bg-white/95 p-2.5 shadow-lg">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo_vector.png" alt="Gatos y Cañas" className="h-full w-full object-contain" />
             </div>
