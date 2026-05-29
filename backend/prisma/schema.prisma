@@ -114,6 +114,7 @@ model Plan {
   zone             String?
   pace             String
   duration         String            @default("medio")
+  timeOfDay        String?
   status           PlanStatus        @default(ACTIVE)
   budgetPerPerson  Float
   totalBudget      Float

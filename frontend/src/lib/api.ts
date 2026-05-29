@@ -1,4 +1,4 @@
-import type { AdminOverview, Plan, PlanSuggestions, Reservation, StoredPlan, TrendingCategories, TrendingNews, User, Venue } from '@/types';
+import type { AdminOverview, Plan, PlanSuggestions, Reservation, StoredPlan, TimeOfDay, TrendingCategories, TrendingNews, User, Venue } from '@/types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://link-plan-api.onrender.com';
 const TOKEN_KEY = 'lp_token';
@@ -66,6 +66,7 @@ export const api = {
     date: string;
     zone?: string;
     duration?: 'corto' | 'medio' | 'largo';
+    timeOfDay?: TimeOfDay;
     excludeIds?: string[];
     variantSeed?: number;
   }) => request<Plan>('/api/plans/generate', { method: 'POST', body: JSON.stringify(body) }),
@@ -75,6 +76,7 @@ export const api = {
     date: string;
     zone?: string;
     duration?: 'corto' | 'medio' | 'largo';
+    timeOfDay?: TimeOfDay;
     morningVenueId?: string | null;
     lunchVenueId: string;
     afternoonVenueId?: string | null;

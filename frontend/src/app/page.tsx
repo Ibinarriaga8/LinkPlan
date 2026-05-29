@@ -9,12 +9,18 @@ import { OnboardingGustos } from '@/components/OnboardingGustos';
 import { useAuth } from '@/lib/authContext';
 import { ADMIN_USER_ID, getStoredAdminToken, setStoredAdminToken } from '@/lib/admin';
 import { buildTimeline, formatDuration } from '@/lib/timeline';
-import type { AdminOverview, Plan, PlanSuggestion, PlanSuggestions, StoredPlan, TrendingEvent, User, Venue } from '@/types';
+import type { AdminOverview, Plan, PlanSuggestion, PlanSuggestions, StoredPlan, TimeOfDay, TrendingEvent, User, Venue } from '@/types';
 
 const DURATIONS = [
   { value: 'corto', label: 'Corto · 1 plan (~1-2h)' },
   { value: 'medio', label: 'Medio · 2 planes (~2-4h)' },
   { value: 'largo', label: 'Largo · 3 planes (~4-6h)' }
+] as const;
+const TIMES_OF_DAY = [
+  { value: 'manana', label: '🌅 Mañana · actividad + comida (13:00)' },
+  { value: 'mediodia', label: '🍽️ Mediodía · comida (13:00) + tarde' },
+  { value: 'tarde', label: '☀️ Tarde · actividad + cena (20:00)' },
+  { value: 'noche', label: '🌙 Noche · cena (20:00) + copas' }
 ] as const;
 const ZONES = [
   '',
@@ -99,6 +105,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [plan, setPlan] = useState<Plan | null>(null);
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('mediodia');
   const contentRef = useRef<HTMLElement>(null);
 
   const [adminToken, setAdminToken] = useState<string | null>(() => getStoredAdminToken());
@@ -155,6 +162,9 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
 
   const companions = useMemo(() => friends, [friends]);
   const favoriteIds = useMemo(() => new Set(favorites.map((v) => v.id)), [favorites]);
+  // El campo permite vaciarse mientras se escribe (budget = NaN); aquí lo saneamos
+  // al rango válido [10, 500] que exige el backend antes de enviarlo.
+  const safeBudget = Number.isFinite(budget) && budget > 0 ? Math.min(500, Math.max(10, budget)) : 50;
 
   const refresh = useCallback(async () => {
     if (isAdmin) {
@@ -253,10 +263,11 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
       const nextPlan = await api.generatePlan({
         organizerId: authUser.id,
         companionIds,
-        budgetPerPerson: budget,
+        budgetPerPerson: safeBudget,
         date,
         zone,
         duration,
+        timeOfDay,
         excludeIds: opts?.excludeIds,
         variantSeed: opts?.excludeIds ? Date.now() % 1000 : 0
       });
@@ -323,10 +334,11 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     try {
       const saved = await api.confirmPlan({
         companionIds,
-        budgetPerPerson: budget,
+        budgetPerPerson: safeBudget,
         date,
         zone,
         duration,
+        timeOfDay,
         morningVenueId: plan.morning?.id ?? null,
         lunchVenueId: plan.lunch.id,
         afternoonVenueId: plan.afternoon?.id ?? null
@@ -470,7 +482,27 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                   </label>
                   <label className="block text-sm">
                     Presupuesto por persona (€)
-                    <input type="number" min={10} max={500} className={inputCls} value={budget} onChange={(e) => setBudget(Number(e.target.value || 50))} />
+                    <input
+                      type="number"
+                      min={10}
+                      max={500}
+                      step={5}
+                      className={inputCls}
+                      value={Number.isFinite(budget) ? budget : ''}
+                      onChange={(e) => setBudget(e.target.value === '' ? NaN : Number(e.target.value))}
+                      onBlur={(e) => {
+                        const n = Number(e.target.value);
+                        setBudget(Number.isFinite(n) && n > 0 ? Math.min(500, Math.max(10, n)) : 50);
+                      }}
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    Momento del día
+                    <select className={inputCls} value={timeOfDay} onChange={(e) => setTimeOfDay(e.target.value as TimeOfDay)}>
+                      {TIMES_OF_DAY.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
                   </label>
                   <label className="block text-sm">
                     Zona
@@ -546,7 +578,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                       </div>
 
                       {(() => {
-                        const { items, totalMin } = buildTimeline(plan);
+                        const { items, totalMin } = buildTimeline(plan, plan.timeOfDay ?? timeOfDay);
                         const venueBySlot: Record<'morning' | 'lunch' | 'afternoon', Venue | null> = {
                           morning: plan.morning,
                           lunch: plan.lunch,
@@ -669,7 +701,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                           </div>
 
                           {(() => {
-                            const { items, totalMin } = buildTimeline({ pace: p.pace, morning: p.morningVenue, lunch: p.lunchVenue, afternoon: p.afternoonVenue });
+                            const { items, totalMin } = buildTimeline({ pace: p.pace, morning: p.morningVenue, lunch: p.lunchVenue, afternoon: p.afternoonVenue }, p.timeOfDay);
                             return (
                               <div className="rounded-lg border border-[#D8E3F2] p-3">
                                 <p className="mb-2 text-xs font-medium text-[#43577A]">Horario sugerido · {formatDuration(totalMin)}</p>

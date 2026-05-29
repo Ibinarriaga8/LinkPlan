@@ -1,3 +1,5 @@
+export type TimeOfDay = 'manana' | 'mediodia' | 'tarde' | 'noche';
+
 export type User = {
   id: string;
   name: string;
@@ -67,6 +69,7 @@ export type Plan = {
   pace: string;
   zone: string;
   duration?: string;
+  timeOfDay?: TimeOfDay;
   totalPeople: number;
   totalBudget: number;
   totalCost: number;
@@ -83,6 +86,7 @@ export type StoredPlan = {
   pace: string;
   zone: string | null;
   duration: string;
+  timeOfDay?: TimeOfDay | null;
   status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   budgetPerPerson: number;
   totalBudget: number;

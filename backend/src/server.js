@@ -61,6 +61,7 @@ const planSchema = z.object({
   date: z.string().min(1),
   zone: z.string().optional().default(''),
   duration: z.enum(['corto', 'medio', 'largo']).optional().default('medio'),
+  timeOfDay: z.enum(['manana', 'mediodia', 'tarde', 'noche']).optional().default('mediodia'),
   excludeIds: z.array(z.string()).optional().default([]),
   variantSeed: z.number().optional().default(0)
 });
@@ -382,6 +383,7 @@ app.post('/api/plans/generate', requireAuth, async (req, res, next) => {
       date: input.date,
       zone: input.zone,
       duration: input.duration,
+      timeOfDay: input.timeOfDay,
       excludeIds: input.excludeIds,
       variantSeed: input.variantSeed,
       restaurants: venues.filter((v) => v.type === VenueType.RESTAURANT),
@@ -401,6 +403,7 @@ const confirmPlanSchema = z.object({
   date: z.string().min(1),
   zone: z.string().optional().default(''),
   duration: z.enum(['corto', 'medio', 'largo']).optional().default('medio'),
+  timeOfDay: z.enum(['manana', 'mediodia', 'tarde', 'noche']).optional().default('mediodia'),
   morningVenueId: z.string().min(1).optional().nullable(),
   lunchVenueId: z.string().min(1),
   afternoonVenueId: z.string().min(1).optional().nullable()
@@ -447,6 +450,7 @@ app.post('/api/plans', requireAuth, async (req, res, next) => {
         zone: input.zone || null,
         pace,
         duration: input.duration,
+        timeOfDay: input.timeOfDay,
         budgetPerPerson: input.budgetPerPerson,
         totalBudget,
         totalCost,
