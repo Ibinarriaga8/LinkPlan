@@ -141,10 +141,19 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
 
   const companions = useMemo(() => friends, [friends]);
   const favoriteIds = useMemo(() => new Set(favorites.map((v) => v.id)), [favorites]);
-  // Solo ofrecemos zonas que realmente tienen sitios en la BBDD: así la zona
-  // elegida siempre se respeta y no acaba mandándote a la otra punta de Madrid.
+  // Todo plan necesita una comida (restaurante), así que solo ofrecemos zonas
+  // que tienen al menos un restaurante: así la zona elegida SIEMPRE da un plan y
+  // nunca acabas con "no hay sitios" ni te mandamos a la otra punta de Madrid.
   const availableZones = useMemo(
-    () => Array.from(new Set(venues.map((v) => v.zone?.trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'es')),
+    () =>
+      Array.from(
+        new Set(
+          venues
+            .filter((v) => v.type === 'RESTAURANT')
+            .map((v) => v.zone?.trim())
+            .filter(Boolean)
+        )
+      ).sort((a, b) => a.localeCompare(b, 'es')),
     [venues]
   );
   // El campo permite vaciarse mientras se escribe (budget = NaN); aquí lo saneamos
