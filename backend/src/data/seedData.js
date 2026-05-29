@@ -53,8 +53,8 @@ const venues = [
   { id:'a23', name:'Paseo por Madrid Río',                       zone:'La Latina', tags:['naturaleza','paseo','relax','deporte'],    price:0,  schedule:'24h',                        url:'https://www.madrid.es/madridrio',       available:true, type:'ACTIVITY' },
   { id:'a24', name:'Salesas Village (planes-noche)',             zone:'Chamberí',  tags:['copas','terraza','planes-noche','grupos'], price:0,  schedule:'18:00-02:00',                url:'https://www.esmadrid.com',              available:true, type:'ACTIVITY' },
 
-  // Restaurants — un sitio real por distrito que tenía solo actividades, para
-  // que TODA zona elegible tenga comida y pueda generar un plan completo.
+  // Restaurants — un sitio real por distrito céntrico que tenía solo actividades,
+  // para que TODA zona del desplegable tenga comida y genere un plan completo.
   // (URLs oficiales verificadas; zona = distrito real del local.)
   { id:'rz-sal-amazonico',  name:'Amazónico',            zone:'Salamanca',             tags:['moderno','internacional','copas'],    price:48, schedule:'13:00-16:30, 20:00-00:00', url:'https://www.amazonicorestaurant.com',  available:true, type:'RESTAURANT' },
   { id:'rz-sal-tenconten',  name:'Ten con Ten',          zone:'Salamanca',             tags:['moderno','mediterraneo','tapas'],     price:35, schedule:'13:00-16:30, 20:30-23:30', url:'https://restaurantetenconten.com',     available:true, type:'RESTAURANT' },
@@ -62,19 +62,7 @@ const venues = [
   { id:'rz-tet-combarro',   name:'Combarro',             zone:'Tetuán',                tags:['pescado','gallego','tradicional'],    price:45, schedule:'13:00-16:30, 20:30-00:00', url:'https://www.combarro.com',             available:true, type:'RESTAURANT' },
   { id:'rz-tet-txistu',     name:'Mesón Txistu',         zone:'Tetuán',                tags:['carne','tradicional','español'],      price:40, schedule:'13:00-16:30, 20:30-23:30', url:'https://www.mesontxistu.com',          available:true, type:'RESTAURANT' },
   { id:'rz-arg-elcano',     name:'Cervecería El Caño',   zone:'Arganzuela',            tags:['tapas','tradicional','birras'],       price:20, schedule:'12:00-16:30, 19:30-23:30', url:'https://cerveceriaelcano.shop',        available:true, type:'RESTAURANT' },
-  { id:'rz-use-royal',      name:'Royal Cantonés',       zone:'Usera',                 tags:['asiatico','chino','dimsum'],          price:25, schedule:'12:30-17:00, 19:00-00:00', url:'https://royalcantonesmadrid.com',      available:true, type:'RESTAURANT' },
-  { id:'rz-car-avelino',    name:'Asador Avelino',       zone:'Carabanchel',           tags:['carne','asador','tradicional'],       price:30, schedule:'13:00-16:30, 20:30-23:30', url:'https://asadoravelino.com',            available:true, type:'RESTAURANT' },
-  { id:'rz-cli-docamar',    name:'Docamar',              zone:'Ciudad Lineal',         tags:['tapas','tradicional','bravas'],       price:18, schedule:'12:00-16:30, 19:30-23:30', url:'https://www.docamar.com',              available:true, type:'RESTAURANT' },
-  { id:'rz-mon-casamingo',  name:'Casa Mingo',           zone:'Moncloa - Aravaca',     tags:['tradicional','asturiano','sidra'],    price:18, schedule:'11:00-23:30',              url:'https://www.casamingo.es',             available:true, type:'RESTAURANT' },
-  { id:'rz-hor-radhuni',    name:'Radhuni Indian',       zone:'Hortaleza',             tags:['indio','asiatico','internacional'],   price:20, schedule:'13:00-16:00, 20:00-23:30', url:'https://www.radhuniindian.com',        available:true, type:'RESTAURANT' },
-  { id:'rz-fue-filandon',   name:'Filandón',             zone:'Fuencarral - El Pardo', tags:['pescado','carne','tradicional'],      price:50, schedule:'13:00-16:30, 20:30-23:30', url:'https://www.filandon.es',              available:true, type:'RESTAURANT' },
-  { id:'rz-sbl-llagar',     name:'Sidrería El Llagar',   zone:'San Blas - Canillejas', tags:['asturiano','tradicional','sidra'],    price:28, schedule:'13:00-16:30, 20:00-00:00', url:'https://www.sidreriaelllagar.com',     available:true, type:'RESTAURANT' },
-  { id:'rz-vlv-asarmiento', name:'Asarmiento',           zone:'Villaverde',            tags:['carne','asador','pescado'],           price:35, schedule:'13:00-16:30, 20:30-23:30', url:'https://restauranteasarmiento.es',     available:true, type:'RESTAURANT' },
-  { id:'rz-mtz-vinateros',  name:'Vinateros 28',         zone:'Moratalaz',             tags:['moderno','español','tapas'],          price:28, schedule:'13:00-16:00, 20:30-23:30', url:'https://www.vinateros28.com',          available:true, type:'RESTAURANT' },
-  { id:'rz-vic-consazon',   name:'Con Sazón',            zone:'Vicálvaro',             tags:['moderno','autor','vistas'],           price:30, schedule:'13:00-16:00, 20:30-23:30', url:'https://consazon.es',                  available:true, type:'RESTAURANT' },
-  { id:'rz-vdv-casacarmen', name:'Casa Carmen',          zone:'Villa de Vallecas',     tags:['tradicional','español','arroz'],      price:25, schedule:'13:00-16:30, 20:30-23:30', url:'https://casacarmenrestaurant.com',     available:true, type:'RESTAURANT' },
-  { id:'rz-pdv-casadoli',   name:'Casa Doli',            zone:'Puente de Vallecas',    tags:['tradicional','español','tapas'],      price:22, schedule:'13:00-16:30, 20:30-23:30', url:'https://casa-doli.es',                 available:true, type:'RESTAURANT' },
-  { id:'rz-bar-madrid',     name:'Restaurante Madrid',   zone:'Barajas',               tags:['tradicional','español','menu'],       price:16, schedule:'13:00-16:30',              url:'https://www.restaurantemadrid07.com',  available:true, type:'RESTAURANT' }
+  { id:'rz-mon-casamingo',  name:'Casa Mingo',           zone:'Moncloa - Aravaca',     tags:['tradicional','asturiano','sidra'],    price:18, schedule:'11:00-23:30',              url:'https://www.casamingo.es',             available:true, type:'RESTAURANT' }
 ];
 
 const demoUsers = [
