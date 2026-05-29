@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { api } from './api';
+import { setStoredAdminToken } from './admin';
 import type { User } from '@/types';
 
 type AuthState = {
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await api.auth.logout().catch(() => {});
+    setStoredAdminToken(null);
     setUser(null);
   }, []);
 

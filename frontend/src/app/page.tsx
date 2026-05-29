@@ -7,6 +7,7 @@ import { ProfilePanel } from '@/components/ProfilePanel';
 import { FriendsPanel } from '@/components/FriendsPanel';
 import { OnboardingGustos } from '@/components/OnboardingGustos';
 import { useAuth } from '@/lib/authContext';
+import { ADMIN_USER_ID, getStoredAdminToken, setStoredAdminToken } from '@/lib/admin';
 import { buildTimeline, formatDuration } from '@/lib/timeline';
 import type { AdminOverview, Plan, PlanSuggestion, PlanSuggestions, StoredPlan, TrendingEvent, User, Venue } from '@/types';
 
@@ -78,6 +79,7 @@ export default function Home() {
 }
 
 function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<void> }) {
+  const isAdmin = authUser.id === ADMIN_USER_ID;
   const [users, setUsers] = useState<User[]>([]);
   const [myPlans, setMyPlans] = useState<StoredPlan[]>([]);
   const [suggestions, setSuggestions] = useState<Record<string, PlanSuggestion[]>>({});
@@ -91,7 +93,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [active, setActive] = useState<Tab>('perfil');
+  const [active, setActive] = useState<Tab>(isAdmin ? 'admin' : 'perfil');
   const [friends, setFriends] = useState<User[]>([]);
   const [me, setMe] = useState<User>(authUser);
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -99,7 +101,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
   const contentRef = useRef<HTMLElement>(null);
 
-  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(() => getStoredAdminToken());
   const [adminOverview, setAdminOverview] = useState<AdminOverview | null>(null);
   const [adminPw, setAdminPw] = useState('');
   const [adminBusy, setAdminBusy] = useState(false);
@@ -155,6 +157,10 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const favoriteIds = useMemo(() => new Set(favorites.map((v) => v.id)), [favorites]);
 
   const refresh = useCallback(async () => {
+    if (isAdmin) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -179,11 +185,32 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
     } finally {
       setLoading(false);
     }
-  }, [authUser.id]);
+  }, [authUser.id, isAdmin]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // En modo admin cargamos el panel directamente con el token guardado al entrar.
+  useEffect(() => {
+    if (!adminToken || adminOverview) return;
+    let cancelled = false;
+    api
+      .adminOverview(adminToken)
+      .then((data) => {
+        if (!cancelled) setAdminOverview(data);
+      })
+      .catch(() => {
+        // Token caducado/ inválido: forzamos re-login limpiando el estado de admin.
+        if (cancelled) return;
+        setStoredAdminToken(null);
+        setAdminToken(null);
+        if (isAdmin) void onLogout();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminToken, adminOverview, isAdmin, onLogout]);
 
   useEffect(() => {
     if (active !== 'news' || newsLoaded || newsLoading) return;
@@ -377,15 +404,16 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
         <div className="grid min-h-[80vh] grid-cols-1 lg:grid-cols-[264px_1fr]">
           <aside className="flex flex-col border-b border-[#D8E3F2] bg-[#F5F9FE]/80 p-4 lg:border-b-0 lg:border-r lg:p-5">
             <div className="flex gap-2 overflow-x-auto pb-1 thin-scroll lg:grid lg:gap-1.5 lg:overflow-visible lg:pb-0">
-              {([
-                ['perfil', 'Mi perfil', '🐱'],
-                ['amigos', 'Mis amigos', '👥'],
-                ['planes', 'Mis planes', '🗓️'],
-                ['generar', 'Generar plan', '✨'],
-                ['sitios', 'Mis sitios', '📍'],
-                ['news', 'Noticias', '🔥'],
-                ['admin', 'Admin', '🔒']
-              ] as const).map(([key, label, icon]) => (
+              {((isAdmin
+                ? [['admin', 'Admin', '🔒']]
+                : [
+                    ['perfil', 'Mi perfil', '🐱'],
+                    ['amigos', 'Mis amigos', '👥'],
+                    ['planes', 'Mis planes', '🗓️'],
+                    ['generar', 'Generar plan', '✨'],
+                    ['sitios', 'Mis sitios', '📍'],
+                    ['news', 'Noticias', '🔥']
+                  ]) as [Tab, string, string][]).map(([key, label, icon]) => (
                 <button
                   key={key}
                   className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-left text-sm font-medium transition ${
@@ -916,9 +944,11 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                     <button
                       className="rounded-lg border border-[#D8E3F2] px-4 py-2 text-sm text-[#43577A] transition hover:bg-[#EAF1FB]"
                       onClick={() => {
+                        setStoredAdminToken(null);
                         setAdminToken(null);
                         setAdminOverview(null);
                         setAdminMsg(null);
+                        void onLogout();
                       }}
                     >
                       Salir de admin

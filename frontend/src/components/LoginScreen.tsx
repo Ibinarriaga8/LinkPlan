@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/authContext';
+import { ADMIN_USER, ADMIN_USERNAME, setStoredAdminToken } from '@/lib/admin';
 import type { User } from '@/types';
 
-type Mode = 'idle' | 'register' | 'login';
+type Mode = 'idle' | 'register' | 'login' | 'admin';
 
 export function LoginScreen() {
   const { setUser } = useAuth();
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [adminPw, setAdminPw] = useState('');
   const [mode, setMode] = useState<Mode>('idle');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -23,6 +25,11 @@ export function LoginScreen() {
     setError(null);
     if (normalized.length < 3) {
       setError('El nombre de usuario debe tener al menos 3 caracteres.');
+      return;
+    }
+    // El admin no usa passkey: se entra por contraseña.
+    if (normalized === ADMIN_USERNAME) {
+      setMode('admin');
       return;
     }
     setBusy(true);
@@ -66,6 +73,22 @@ export function LoginScreen() {
     }
   }
 
+  async function handleAdminLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    try {
+      const { token } = await api.adminLogin(adminPw);
+      setStoredAdminToken(token);
+      setAdminPw('');
+      setUser(ADMIN_USER);
+    } catch (err) {
+      setError((err as Error).message ?? 'Contraseña de administrador incorrecta.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-md overflow-hidden rounded-3xl border border-[#D8E3F2] bg-white shadow-xl shadow-[#0A2E6E]/5">
@@ -81,7 +104,43 @@ export function LoginScreen() {
             </p>
           </div>
 
-        {mode !== 'register' ? (
+        {mode === 'admin' ? (
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <p className="text-sm bg-[#EAF1FB] border border-[#D8E3F2] rounded-xl p-3">
+              🔒 Acceso de <strong>administrador</strong>. Introduce la contraseña.
+            </p>
+            <label className="block">
+              <span className="text-sm font-medium">Contraseña de administrador</span>
+              <input
+                type="password"
+                value={adminPw}
+                onChange={(e) => setAdminPw(e.target.value)}
+                placeholder="••••••••"
+                autoFocus
+                autoComplete="current-password"
+                className="mt-1 w-full px-4 py-3 rounded-xl border border-[#D8E3F2] focus:outline-none focus:border-[#2F6FBF]"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={busy || !adminPw}
+              className="w-full px-4 py-3 rounded-xl bg-[#0A2E6E] text-white font-medium hover:bg-black disabled:opacity-50"
+            >
+              {busy ? 'Comprobando…' : 'Entrar como admin'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('idle');
+                setAdminPw('');
+                setError(null);
+              }}
+              className="w-full px-4 py-2 text-sm text-[#43577A] hover:text-[#0A2E6E]"
+            >
+              Volver
+            </button>
+          </form>
+        ) : mode !== 'register' ? (
           <form onSubmit={handleContinue} className="space-y-4">
             <label className="block">
               <span className="text-sm font-medium">Nombre de usuario</span>
