@@ -281,6 +281,47 @@ function signAdminToken() {
   return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: '12h' });
 }
 
+// --- Rate-limit del login de admin (en memoria) para frenar fuerza bruta ---
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 min
+const ADMIN_LOGIN_MAX_ATTEMPTS = 5;
+const adminLoginAttempts = new Map(); // ip -> { count, firstAt }
+
+function clientIp(req) {
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+// Bloquea si una IP ya agotó los intentos dentro de la ventana actual.
+function adminLoginRateLimit(req, res, next) {
+  const now = Date.now();
+  const ip = clientIp(req);
+  const entry = adminLoginAttempts.get(ip);
+  if (entry && now - entry.firstAt > ADMIN_LOGIN_WINDOW_MS) {
+    adminLoginAttempts.delete(ip); // ventana caducada: empezamos de cero
+  }
+  const current = adminLoginAttempts.get(ip);
+  if (current && current.count >= ADMIN_LOGIN_MAX_ATTEMPTS) {
+    const retrySec = Math.ceil((ADMIN_LOGIN_WINDOW_MS - (now - current.firstAt)) / 1000);
+    res.set('Retry-After', String(retrySec));
+    return res.status(429).json({ message: `Demasiados intentos. Vuelve a intentarlo en ${Math.ceil(retrySec / 60)} min.` });
+  }
+  next();
+}
+
+function recordAdminLoginFailure(req) {
+  const now = Date.now();
+  const ip = clientIp(req);
+  const entry = adminLoginAttempts.get(ip);
+  if (!entry || now - entry.firstAt > ADMIN_LOGIN_WINDOW_MS) {
+    adminLoginAttempts.set(ip, { count: 1, firstAt: now });
+  } else {
+    entry.count += 1;
+  }
+}
+
+function clearAdminLoginAttempts(req) {
+  adminLoginAttempts.delete(clientIp(req));
+}
+
 function requireAdmin(req, res, next) {
   let token = req.headers?.['x-admin-token'];
   if (!token) {
@@ -299,4 +340,13 @@ function requireAdmin(req, res, next) {
   }
 }
 
-module.exports = { createAuthRouter, requireAuth, verifyAdminPassword, signAdminToken, requireAdmin };
+module.exports = {
+  createAuthRouter,
+  requireAuth,
+  verifyAdminPassword,
+  signAdminToken,
+  requireAdmin,
+  adminLoginRateLimit,
+  recordAdminLoginFailure,
+  clearAdminLoginAttempts
+};

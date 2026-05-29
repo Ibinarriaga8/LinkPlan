@@ -9,10 +9,22 @@ const { computePlanSuggestions } = require('./services/suggestionService');
 const { validateAllVenues } = require('./services/urlValidationService');
 const { getTrendingNews, getDiscoveredVenues } = require('./services/newsService');
 const { COLORS } = require('./data/seedData');
-const { createAuthRouter, requireAuth, verifyAdminPassword, signAdminToken, requireAdmin } = require('./auth');
+const {
+  createAuthRouter,
+  requireAuth,
+  verifyAdminPassword,
+  signAdminToken,
+  requireAdmin,
+  adminLoginRateLimit,
+  recordAdminLoginFailure,
+  clearAdminLoginAttempts
+} = require('./auth');
 
 const prisma = new PrismaClient();
 const app = express();
+// Render sirve detrás de un proxy: confiamos en el primer hop para leer la IP
+// real del cliente (X-Forwarded-For) y que el rate-limit no agrupe a todos.
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4000;
 const allowedOrigins = (process.env.FRONTEND_URL || 'https://link-plan-frontend.vercel.app,https://link-plan-frontend-dts4.vercel.app,http://localhost:3000')
   .split(',')
@@ -280,11 +292,13 @@ app.get('/api/admin/data', async (_req, res, next) => {
 });
 
 // --- Admin (protegido por contraseña, separado del login de usuario por passkey) ---
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', adminLoginRateLimit, (req, res) => {
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
   if (!verifyAdminPassword(password)) {
+    recordAdminLoginFailure(req);
     return res.status(401).json({ message: 'Contraseña de administrador incorrecta' });
   }
+  clearAdminLoginAttempts(req); // login correcto: reseteamos el contador de esa IP
   res.json({ token: signAdminToken() });
 });
 
