@@ -790,7 +790,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                         </div>
                       </a>
                     ))}
-                    <p className="pt-1 text-center text-[11px] text-[#8DA0BC]">Fuentes: esMadrid · Madrid Secreto · Entradas.com · Agenda Madrid · se actualiza periódicamente</p>
+                    <p className="pt-1 text-center text-[11px] text-[#8DA0BC]">Fuentes: esMadrid · Madrid Secreto · Entradas.com · Agenda Madrid · Un Buen Día en Madrid · se actualiza periódicamente</p>
                   </div>
                 )}
               </div>

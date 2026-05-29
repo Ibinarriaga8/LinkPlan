@@ -5,7 +5,8 @@ const SOURCES = {
   madridsecreto: 'https://madridsecreto.co/feed/',
   entradas: 'https://www.entradas.com/city/madrid-370/conciertos-y-festivales-85/',
   // Agenda municipal oficial (datos abiertos del Ayuntamiento). Los enlaces apuntan a madrid.es.
-  madriddatos: 'https://datos.madrid.es/egob/catalogo/206974-0-agenda-eventos-culturales-100.json'
+  madriddatos: 'https://datos.madrid.es/egob/catalogo/206974-0-agenda-eventos-culturales-100.json',
+  unbuendia: 'https://unbuendiaenmadrid.com/feed/'
 };
 const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 
@@ -19,7 +20,8 @@ const ALLOWED_HOSTS = [
   'guiarepsol.com',
   'esmadrid.com',
   'entradas.com',
-  'madrid.es'
+  'madrid.es',
+  'unbuendiaenmadrid.com'
 ];
 
 function hostAllowed(rawUrl) {
@@ -160,17 +162,18 @@ function stripHtml(s) {
   return String(s || '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, ' ').trim();
 }
 
-function normalizeMadridSecreto(xml) {
+// Feeds RSS de WordPress (Madrid Secreto, Un Buen Día en Madrid): misma estructura.
+function normalizeWordpressRss(xml, { source, idPrefix, fallbackCategory }) {
   const doc = parser.parse(xml);
   const items = asArray(doc?.rss?.channel?.item);
   return items.map((it) => {
     const published = it.pubDate ? new Date(it.pubDate) : null;
     const cat = asArray(it.category)[0];
     return {
-      id: `msecreto-${textOf(it.guid) || textOf(it.link)}`,
-      source: 'Madrid Secreto',
+      id: `${idPrefix}-${textOf(it.guid) || textOf(it.link)}`,
+      source,
       title: decodeEntities(textOf(it.title)),
-      category: cat ? `📰 ${decodeEntities(textOf(cat))}` : '📰 Madrid Secreto',
+      category: cat ? `📰 ${decodeEntities(textOf(cat))}` : fallbackCategory,
       description: decodeEntities(stripHtml(textOf(it.description))).slice(0, 280),
       date: published && !Number.isNaN(published.getTime()) ? published.toISOString().slice(0, 10) : null,
       time: null,
@@ -306,11 +309,12 @@ function interleaveBySource(items) {
 async function loadItems() {
   if (cache.items.length && Date.now() - cache.at < CACHE_TTL_MS) return cache.items;
 
-  const [esmadridXml, madridsecretoXml, entradasHtml, madridDatosJson] = await Promise.all([
+  const [esmadridXml, madridsecretoXml, entradasHtml, madridDatosJson, unbuendiaXml] = await Promise.all([
     fetchText(SOURCES.esmadrid).catch(() => null),
     fetchText(SOURCES.madridsecreto).catch(() => null),
     fetchText(SOURCES.entradas).catch(() => null),
-    fetchText(SOURCES.madriddatos).catch(() => null)
+    fetchText(SOURCES.madriddatos).catch(() => null),
+    fetchText(SOURCES.unbuendia).catch(() => null)
   ]);
 
   let items = [];
@@ -323,9 +327,10 @@ async function loadItems() {
     }
   };
   collect(esmadridXml, normalizeEsMadrid);
-  collect(madridsecretoXml, normalizeMadridSecreto);
+  collect(madridsecretoXml, (xml) => normalizeWordpressRss(xml, { source: 'Madrid Secreto', idPrefix: 'msecreto', fallbackCategory: '📰 Madrid Secreto' }));
   collect(entradasHtml, normalizeEntradas);
   collect(madridDatosJson, normalizeMadridDatos);
+  collect(unbuendiaXml, (xml) => normalizeWordpressRss(xml, { source: 'Un Buen Día en Madrid', idPrefix: 'unbuendia', fallbackCategory: '📰 Un Buen Día' }));
 
   const seen = new Set();
   items = items
