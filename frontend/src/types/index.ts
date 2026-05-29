@@ -68,6 +68,7 @@ export type Plan = {
   date: string;
   pace: string;
   zone: string;
+  zoneRespected?: boolean;
   duration?: string;
   timeOfDay?: TimeOfDay;
   totalPeople: number;

@@ -198,10 +198,22 @@ function generatePlan({
     return ranked;
   };
 
+  // La zona es un filtro duro: si la eliges, el plan se queda en esa zona. Solo
+  // si no hay ningún sitio de esa zona para un hueco concreto recurrimos al resto
+  // (y lo marcamos para avisar al usuario). Sin zona, no se filtra nada.
+  let zoneRespected = Boolean(zone);
+  const inZone = (list) => {
+    if (!zone) return list;
+    const matched = list.filter((v) => v.zone.includes(zone) || zone.includes(v.zone));
+    if (matched.length > 0) return matched;
+    zoneRespected = false;
+    return list;
+  };
+
   const { morning: wantsMorning, afternoon: wantsAfternoon } = slotsForDuration(duration);
-  const candidateLunches = rankRestaurants(windows.lunch).slice(0, 14);
-  const candidateMorning = wantsMorning ? rankActivities(windows.morning).slice(0, 14) : [];
-  const candidateAfternoon = wantsAfternoon ? rankActivities(windows.afternoon).slice(0, 14) : [];
+  const candidateLunches = inZone(rankRestaurants(windows.lunch)).slice(0, 14);
+  const candidateMorning = wantsMorning ? inZone(rankActivities(windows.morning)).slice(0, 14) : [];
+  const candidateAfternoon = wantsAfternoon ? inZone(rankActivities(windows.afternoon)).slice(0, 14) : [];
 
   if (candidateLunches.length === 0) {
     throw new Error('No hay restaurantes abiertos para ese momento del día con ese presupuesto. Prueba otra hora, zona o sube el presupuesto.');
@@ -234,7 +246,12 @@ function generatePlan({
     }
   }
 
-  // Si no cabe la actividad dentro del presupuesto, al menos devolvemos la comida.
+  // Degradación elegante: si no hay dos actividades distintas (p.ej. la zona solo
+  // tiene una), damos actividad + comida antes que caer a comida sola.
+  if (!best && wantsAfternoon) {
+    for (const l of candidateLunches) for (const m of candidateMorning) consider(m, l, null);
+  }
+  // Si aun así no cabe ninguna actividad en el presupuesto, al menos la comida.
   if (!best && wantsMorning) {
     for (const l of candidateLunches) consider(null, l, null);
   }
@@ -250,6 +267,7 @@ function generatePlan({
   return {
     date,
     zone,
+    zoneRespected,
     pace,
     duration,
     timeOfDay: tod,

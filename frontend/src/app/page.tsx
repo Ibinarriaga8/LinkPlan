@@ -577,6 +577,12 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                         <p className="text-[#5B6B82]">Presupuesto: {plan.totalBudget.toFixed(0)}€ · Sobran {plan.remainingBudget.toFixed(0)}€</p>
                       </div>
 
+                      {plan.zone && plan.zoneRespected === false ? (
+                        <p className="rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">
+                          No encontramos sitios en <strong>{plan.zone}</strong> para este momento del día, así que el plan usa zonas cercanas. Prueba con otra zona u otro horario.
+                        </p>
+                      ) : null}
+
                       {(() => {
                         const { items, totalMin } = buildTimeline(plan, plan.timeOfDay ?? timeOfDay);
                         const venueBySlot: Record<'morning' | 'lunch' | 'afternoon', Venue | null> = {

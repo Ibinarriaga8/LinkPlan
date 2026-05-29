@@ -10,7 +10,8 @@ const restaurants = [
 ];
 const activities = [
   { id: 'a1', tags: ['arte'], zone: 'Centro', price: 12, available: true },
-  { id: 'a2', tags: ['naturaleza'], zone: 'Retiro', price: 0, available: true }
+  { id: 'a2', tags: ['naturaleza'], zone: 'Retiro', price: 0, available: true },
+  { id: 'a3', tags: ['cultura'], zone: 'Centro', price: 8, available: true }
 ];
 
 function build(duration) {
@@ -125,4 +126,47 @@ test('noche acompaña la cena con un plan de noche, no un museo de día', () => 
   const plan = buildTod('noche', 'medio');
   assert.equal(plan.lunch.id, 'rn');
   assert.equal(plan.morning.id, 'an');
+});
+
+// --- Zona como filtro duro --------------------------------------------------
+const zoneRestaurants = [
+  { id: 'rt', name: 'En Tetuán', tags: ['tapas'], zone: 'Tetuán', price: 20, available: true, schedule: '13:00-16:00' },
+  { id: 'rr', name: 'En Retiro', tags: ['tapas', 'tradicional'], zone: 'Retiro', price: 18, available: true, schedule: '13:00-16:00' }
+];
+const zoneActivities = [
+  { id: 'at', name: 'Act Tetuán', tags: ['arte'], zone: 'Tetuán', price: 5, available: true, schedule: '10:00-20:00' },
+  { id: 'ar', name: 'Act Retiro', tags: ['arte', 'naturaleza'], zone: 'Retiro', price: 0, available: true, schedule: '10:00-20:00' }
+];
+
+test('si elijo Tetuán, el plan se queda en Tetuán (no me manda a Retiro)', () => {
+  const plan = generatePlan({
+    organizer,
+    companions: [],
+    budgetPerPerson: 80,
+    date: '2026-05-29',
+    zone: 'Tetuán',
+    timeOfDay: 'mediodia',
+    duration: 'medio',
+    restaurants: zoneRestaurants,
+    activities: zoneActivities
+  });
+  assert.equal(plan.lunch.zone, 'Tetuán');
+  assert.equal(plan.morning.zone, 'Tetuán');
+  assert.equal(plan.zoneRespected, true);
+});
+
+test('si la zona no tiene sitios, hace fallback y lo avisa (zoneRespected=false)', () => {
+  const plan = generatePlan({
+    organizer,
+    companions: [],
+    budgetPerPerson: 80,
+    date: '2026-05-29',
+    zone: 'Moncloa', // ninguna venue en esa zona
+    timeOfDay: 'mediodia',
+    duration: 'corto',
+    restaurants: zoneRestaurants,
+    activities: zoneActivities
+  });
+  assert.ok(plan.lunch);
+  assert.equal(plan.zoneRespected, false);
 });
