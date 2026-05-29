@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { LoginScreen } from '@/components/LoginScreen';
 import { ProfilePanel } from '@/components/ProfilePanel';
@@ -97,6 +97,15 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [plan, setPlan] = useState<Plan | null>(null);
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
+  const contentRef = useRef<HTMLElement>(null);
+
+  function selectTab(key: Tab) {
+    setActive(key);
+    // En móvil el menú se apila encima del contenido: bajamos suavemente al panel.
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }
 
   const [companionIds, setCompanionIds] = useState<string[]>([]);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -340,7 +349,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                       ? 'bg-[#0A2E6E] text-white shadow-sm shadow-[#0A2E6E]/30'
                       : 'text-[#43577A] hover:bg-[#E3ECF8]'
                   }`}
-                  onClick={() => setActive(key)}
+                  onClick={() => selectTab(key)}
                 >
                   <span className="text-base">{icon}</span>
                   {label}
@@ -369,7 +378,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             </div>
           </aside>
 
-          <section className="p-6">
+          <section ref={contentRef} className="scroll-mt-4 p-6">
             {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
             {loading ? <p className="text-sm text-[#5B6B82]">Cargando datos...</p> : null}
 
