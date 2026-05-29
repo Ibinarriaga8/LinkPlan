@@ -440,7 +440,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                 </button>
               ))}
             </div>
-            <div className="mt-auto pt-6 border-t border-[#D8E3F2] mt-6">
+            <div className="mt-auto hidden pt-6 border-t border-[#D8E3F2] mt-6 lg:block">
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white"
