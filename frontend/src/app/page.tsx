@@ -6,6 +6,7 @@ import { LoginScreen } from '@/components/LoginScreen';
 import { ProfilePanel } from '@/components/ProfilePanel';
 import { FriendsPanel } from '@/components/FriendsPanel';
 import { OnboardingGustos } from '@/components/OnboardingGustos';
+import { AdPopup } from '@/components/AdPopup';
 import { useAuth } from '@/lib/authContext';
 import { ADMIN_USER_ID, getStoredAdminToken, setStoredAdminToken } from '@/lib/admin';
 import { buildTimeline, formatDuration } from '@/lib/timeline';
@@ -1170,6 +1171,8 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
           })}
         </nav>
       ) : null}
+
+      <AdPopup />
     </div>
   );
 }
