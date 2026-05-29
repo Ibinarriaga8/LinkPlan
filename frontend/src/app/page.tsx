@@ -373,12 +373,6 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                   <p className="truncate text-xs text-[#5B6B82]">@{authUser.username}</p>
                 </div>
               </div>
-              <button
-                onClick={() => void onLogout()}
-                className="mt-3 w-full rounded-lg border border-[#D8E3F2] px-3 py-2 text-xs text-[#43577A] hover:bg-[#EAF1FB]"
-              >
-                Cerrar sesión
-              </button>
             </div>
           </aside>
 
@@ -386,7 +380,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             {error ? <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
             {loading ? <p className="text-sm text-[#5B6B82]">Cargando datos...</p> : null}
 
-            {active === 'perfil' ? <ProfilePanel me={me} onSave={(patch) => void saveProfile(patch)} /> : null}
+            {active === 'perfil' ? <ProfilePanel me={me} onSave={(patch) => void saveProfile(patch)} onLogout={onLogout} /> : null}
 
             {active === 'amigos' ? (
               <FriendsPanel me={me} friends={friends} allUsers={users} onToggleFriend={(uid) => void toggleFriend(uid)} />

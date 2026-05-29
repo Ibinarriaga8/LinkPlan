@@ -18,7 +18,7 @@ const ACTIVITY_TAGS = [
 
 type ProfilePatch = Partial<Pick<User, 'name' | 'description' | 'foodTags' | 'activityTags'>>;
 
-export function ProfilePanel({ me, onSave }: { me: User; onSave: (patch: ProfilePatch) => void }) {
+export function ProfilePanel({ me, onSave, onLogout }: { me: User; onSave: (patch: ProfilePatch) => void; onLogout: () => void | Promise<void> }) {
   const [name, setName] = useState(me.name);
   const [description, setDescription] = useState(me.description ?? '');
   const [foodTags, setFoodTags] = useState<string[]>(me.foodTags);
@@ -108,6 +108,15 @@ export function ProfilePanel({ me, onSave }: { me: User; onSave: (patch: Profile
           </button>
         </div>
       </section>
+
+      <div className="flex justify-end border-t border-[#D8E3F2] pt-4">
+        <button
+          onClick={() => void onLogout()}
+          className="rounded-lg border border-[#D8E3F2] px-4 py-2 text-sm text-[#43577A] transition hover:bg-[#EAF1FB] hover:text-[#0E4DA4]"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </div>
   );
 }
