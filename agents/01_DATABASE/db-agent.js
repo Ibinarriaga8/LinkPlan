@@ -13,6 +13,11 @@ function resolvePrismaClient(root) {
   return null;
 }
 
+function resolveNewsService(root) {
+  const p = path.join(root, 'backend', 'src', 'services', 'newsService.js');
+  return fs.existsSync(p) ? p : null;
+}
+
 class DatabaseAgent {
   constructor({ logger, settings, root } = {}) {
     this.logger = logger || new Logger({ agent: 'DATABASE' });
@@ -77,17 +82,66 @@ class DatabaseAgent {
     return freq;
   }
 
+  loadNewsService() {
+    if (this._newsService !== undefined) return this._newsService;
+    const p = resolveNewsService(this.root);
+    try {
+      this._newsService = p ? require(p) : null;
+    } catch (err) {
+      this.logger.warn('No se pudo cargar newsService', { error: err.message });
+      this._newsService = null;
+    }
+    return this._newsService;
+  }
+
+  // Inserta/actualiza venues (idempotente por id). Devuelve cuántos se crean vs actualizan.
+  async upsertVenues(venues = []) {
+    if (!this.connected || !venues.length) return { incorporated: 0, updated: 0 };
+    let incorporated = 0;
+    let updated = 0;
+    for (const v of venues) {
+      try {
+        const existing = await this.prisma.venue.findUnique({ where: { id: v.id }, select: { id: true } });
+        await this.prisma.venue.upsert({ where: { id: v.id }, update: v, create: v });
+        if (existing) updated += 1;
+        else incorporated += 1;
+      } catch (err) {
+        this.logger.warn('No se pudo incorporar venue', { id: v.id, error: err.message });
+      }
+    }
+    return { incorporated, updated };
+  }
+
+  // Descubre lugares en las fuentes de tendencias y los incorpora a la BBDD.
+  async incorporateTrendingVenues() {
+    const news = this.loadNewsService();
+    if (!news || typeof news.getDiscoveredVenues !== 'function') {
+      return { discovered: 0, incorporated: 0, updated: 0, reason: 'news-service-unavailable' };
+    }
+    let discovered = [];
+    try {
+      discovered = await news.getDiscoveredVenues();
+    } catch (err) {
+      this.logger.warn('Fallo al descubrir venues', { error: err.message });
+      return { discovered: 0, incorporated: 0, updated: 0, reason: 'discovery-failed' };
+    }
+    const result = await this.upsertVenues(discovered);
+    this.logger.info('Venues incorporados desde tendencias', { discovered: discovered.length, ...result });
+    return { discovered: discovered.length, ...result };
+  }
+
   async run() {
     const health = await this.healthCheck();
     if (!health.ok) {
       this.logger.warn('DATABASE saltado', health);
       return { status: 'skipped', output: health, errors: [] };
     }
+    const incorporation = await this.incorporateTrendingVenues();
     const [users, venues] = await Promise.all([this.getAllUsers(), this.getAllVenues()]);
-    this.logger.info('DATABASE listo', { users: users.length, venues: venues.length });
+    this.logger.info('DATABASE listo', { users: users.length, venues: venues.length, incorporated: incorporation.incorporated });
     return {
       status: 'ok',
-      output: { userCount: users.length, venueCount: venues.length },
+      output: { userCount: users.length, venueCount: venues.length, incorporation },
       errors: []
     };
   }

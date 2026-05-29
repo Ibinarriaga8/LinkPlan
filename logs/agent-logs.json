@@ -3,3 +3,5 @@
 {"ts":"2026-05-26T10:49:46.843Z","level":"WARN","agent":"TRENDS","message":"TRENDS sin DATABASE inyectado; modo standalone","meta":null}
 {"ts":"2026-05-26T10:49:47.121Z","level":"INFO","agent":"DEVELOPER","message":"Endpoint generado","meta":{"file":"/Users/claudia/Desktop/LinkPlan/agents/03_DEVELOPER/generated/createFeedback.endpoint.js","valid":true}}
 {"ts":"2026-05-26T10:49:47.123Z","level":"INFO","agent":"DEVELOPER","message":"Componente generado","meta":{"file":"/Users/claudia/Desktop/LinkPlan/agents/03_DEVELOPER/generated/FeedbackCard.tsx"}}
+{"ts":"2026-05-29T08:01:57.008Z","level":"INFO","agent":"DATABASE","message":"Venues incorporados desde tendencias","meta":{"discovered":158,"incorporated":157,"updated":1}}
+{"ts":"2026-05-29T08:01:57.022Z","level":"INFO","agent":"DATABASE","message":"DATABASE listo","meta":{"users":3,"venues":205,"incorporated":157}}

@@ -354,4 +354,82 @@ async function getTrendingNews({ limit = 15 } = {}) {
   return { updatedAt: new Date(cache.at || Date.now()).toISOString(), total: items.length, items: items.slice(0, limit) };
 }
 
-module.exports = { getTrendingNews };
+function slugifyVenueId(name) {
+  const base = String(name)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  return `disc-${base || 'venue'}`;
+}
+
+function priceFromText(text) {
+  const m = String(text || '').match(/(\d+)/);
+  return m ? Number(m[1]) : 0;
+}
+
+// "Centro Cultural Casa de Vacas (Retiro)" -> "Retiro"
+function zoneFromLocation(loc) {
+  const m = String(loc || '').match(/\(([^)]+)\)\s*$/);
+  return m ? m[1].trim() : '';
+}
+
+// Detecta strings que son direcciones (no nombres de lugar): "Calle X, 5", "de Ercilla, 20"…
+const ADDRESS_RE = /^(calle|c\/|c\.|avenida|avda|av\.|paseo|plaza|pza|glorieta|ronda|carretera|ctra|camino|de|del)\s/i;
+function looksLikeAddress(s) {
+  return ADDRESS_RE.test(s) || /,\s*\d+\s*$/.test(s);
+}
+
+function venueTagsFromCategory(category) {
+  const c = String(category || '').toLowerCase();
+  const tags = [];
+  if (/concier|música|music|festival/.test(c)) tags.push('conciertos', 'musica');
+  if (/teatro/.test(c)) tags.push('teatro');
+  if (/danza|baile/.test(c)) tags.push('danza', 'baile');
+  if (/exposic|arte|museo/.test(c)) tags.push('arte', 'exposiciones');
+  if (/fiesta|verbena/.test(c)) tags.push('fiestas');
+  if (/cine/.test(c)) tags.push('cine');
+  if (/gastronom|merca/.test(c)) tags.push('gastronomia', 'mercadillos');
+  if (!tags.length) tags.push('eventos', 'cultura');
+  return [...new Set(tags)];
+}
+
+// Extrae lugares reutilizables (recintos, salas, centros) de los items de las
+// fuentes de tendencias, mapeados al esquema Venue para que el agente de BBDD
+// los incorpore. Solo items con un `venue` (ubicación) usable; ignora artículos.
+async function getDiscoveredVenues() {
+  const items = await loadItems();
+  const byKey = new Map();
+  for (const it of items) {
+    // esMadrid expone la dirección en `venue`, no el nombre del local: lo ignoramos.
+    if (it.source === 'esMadrid') continue;
+    const raw = typeof it.venue === 'string' ? it.venue.trim() : '';
+    if (!raw || raw.length < 3 || raw.length > 70 || looksLikeAddress(raw)) continue;
+    const cleanName = decodeEntities(raw.replace(/\s*\([^)]*\)\s*$/, '').trim()) || raw;
+    const key = cleanName.toLowerCase();
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        id: slugifyVenueId(cleanName),
+        name: cleanName,
+        zone: zoneFromLocation(raw),
+        tags: [],
+        price: priceFromText(it.price),
+        schedule: '',
+        url: it.url || '',
+        available: true,
+        type: 'ACTIVITY'
+      });
+    }
+    const v = byKey.get(key);
+    for (const tag of venueTagsFromCategory(it.category)) if (!v.tags.includes(tag)) v.tags.push(tag);
+    const p = priceFromText(it.price);
+    if (p && (!v.price || p < v.price)) v.price = p;
+    if (!v.url && it.url) v.url = it.url;
+  }
+  // El esquema Venue exige url; descartamos los que se queden sin enlace.
+  return [...byKey.values()].filter((v) => v.url);
+}
+
+module.exports = { getTrendingNews, getDiscoveredVenues };
