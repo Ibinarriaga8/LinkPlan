@@ -97,13 +97,14 @@ export function OnboardingGustos({
       <span className="pointer-events-none absolute -right-24 top-10 size-72 rounded-full bg-sky/20 blur-3xl animate-float-slow" />
       <div className="relative mx-auto max-w-2xl animate-fade-up">
         {/* Cabecera */}
-        <div className="overflow-hidden rounded-t-4xl border border-white/70 bg-brand-deep px-7 pb-7 pt-9 text-white shadow-card">
+        <div className="azulejo-texture relative overflow-hidden rounded-t-4xl border border-white/70 bg-brand-deep px-7 pb-7 pt-9 text-white shadow-card">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/70">Bienvenida, {me.name}</p>
           <h1 className="display mt-1 text-3xl sm:text-4xl">Cuéntanos tus gustos</h1>
           <p className="mt-2 max-w-md text-sm text-white/80">
             Usaremos esto para proponerte planes a tu medida. Puedes cambiarlos cuando quieras desde tu perfil.
           </p>
         </div>
+        <div className="azulejo-cenefa" aria-hidden />
 
         <div className="rounded-b-4xl border border-t-0 border-hair bg-white p-6 shadow-card sm:p-7">
           {trending.length > 0 ? (

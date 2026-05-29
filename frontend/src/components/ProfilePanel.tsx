@@ -47,7 +47,7 @@ export function ProfilePanel({ me, onSave, onLogout }: { me: User; onSave: (patc
   return (
     <div className="space-y-6">
       {/* Hero perfil con degradado de marca */}
-      <section className="relative overflow-hidden rounded-4xl border border-hair bg-brand-deep p-6 text-white shadow-card animate-fade-up sm:p-8">
+      <section className="azulejo-texture relative overflow-hidden rounded-4xl border border-hair bg-brand-deep p-6 text-white shadow-card animate-fade-up sm:p-8">
         <span className="pointer-events-none absolute -right-10 -top-10 size-44 rounded-full bg-white/10 blur-2xl animate-glow-pulse" />
         <div className="relative flex items-center gap-4">
           <div

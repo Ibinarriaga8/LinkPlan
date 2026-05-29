@@ -481,7 +481,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   return (
     <div className="min-h-screen">
       {/* ---------------- Top bar (sticky, glass) ---------------- */}
-      <header className="sticky top-0 z-40 border-b border-white/60 glass">
+      <header className="sticky top-0 z-40 glass shadow-soft">
         <div className="mx-auto flex h-[60px] max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
           <button onClick={() => selectTab(isAdmin ? 'admin' : 'perfil')} className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -551,6 +551,7 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
             ) : null}
           </div>
         </div>
+        <div className="azulejo-cenefa opacity-90" aria-hidden />
       </header>
 
       {/* ---------------- Contenido ---------------- */}

@@ -104,7 +104,7 @@ export function LoginScreen() {
       <div className="relative w-full max-w-md animate-scale-in">
         <div className="overflow-hidden rounded-[28px] border border-white/70 shadow-card glass-strong">
           {/* Cabecera de marca */}
-          <div className="relative overflow-hidden bg-brand-deep px-8 pb-7 pt-9 text-center text-white">
+          <div className="azulejo-texture relative overflow-hidden bg-brand-deep px-8 pb-7 pt-9 text-center text-white">
             <span className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-white/10 blur-2xl" />
             <div className="relative mx-auto flex size-16 items-center justify-center rounded-3xl bg-white/95 p-2 shadow-lg">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -115,6 +115,7 @@ export function LoginScreen() {
               {mode === 'admin' ? 'Acceso admin' : mode === 'register' ? 'Crea tu cuenta' : 'Entra con tu huella'}
             </h1>
           </div>
+          <div className="azulejo-cenefa" aria-hidden />
 
           <div className="p-7 sm:p-8">
             {mode !== 'admin' && mode !== 'register' ? (

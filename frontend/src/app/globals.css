@@ -30,6 +30,49 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Azulejo madrileño como marca de agua sutil del fondo (toda la app). Va por
+   detrás del contenido; las tarjetas blancas tapan el patrón y dejan ver la
+   textura solo en los huecos del lienzo. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/azulejo.png");
+  background-size: 200px;
+  background-repeat: repeat;
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+/* Textura de azulejo sobre los héroes de degradado (login, onboarding, perfil).
+   isolation + z-index:-1 la mantiene DETRÁS del contenido (texto nítido), y
+   soft-light la funde como un relieve tono sobre tono, elegante y legible. */
+.azulejo-texture {
+  isolation: isolate;
+}
+.azulejo-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("/azulejo.png");
+  background-size: 160px;
+  background-repeat: repeat;
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Cenefa: tira de azulejos en miniatura como filo decorativo (divisor de marca). */
+.azulejo-cenefa {
+  height: 22px;
+  background-image: url("/azulejo.png");
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
 h1,
 h2,
 h3,
