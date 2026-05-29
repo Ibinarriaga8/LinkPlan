@@ -7,9 +7,9 @@ const { PrismaClient, VenueType, ReservationStatus } = require('@prisma/client')
 const { generatePlan, pickPace } = require('./services/planService');
 const { computePlanSuggestions } = require('./services/suggestionService');
 const { validateAllVenues } = require('./services/urlValidationService');
-const { getTrendingNews } = require('./services/newsService');
+const { getTrendingNews, getDiscoveredVenues } = require('./services/newsService');
 const { COLORS } = require('./data/seedData');
-const { createAuthRouter, requireAuth } = require('./auth');
+const { createAuthRouter, requireAuth, verifyAdminPassword, signAdminToken, requireAdmin } = require('./auth');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -274,6 +274,60 @@ app.get('/api/admin/data', async (_req, res, next) => {
       prisma.reservation.count()
     ]);
     res.json({ restaurants, activities, users, stats: { plans, reservations } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// --- Admin (protegido por contraseña, separado del login de usuario por passkey) ---
+app.post('/api/admin/login', (req, res) => {
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  if (!verifyAdminPassword(password)) {
+    return res.status(401).json({ message: 'Contraseña de administrador incorrecta' });
+  }
+  res.json({ token: signAdminToken() });
+});
+
+app.get('/api/admin/overview', requireAdmin, async (_req, res, next) => {
+  try {
+    const [users, venues, plans, reservations] = await Promise.all([
+      prisma.user.findMany({ orderBy: { createdAt: 'asc' } }),
+      prisma.venue.findMany({ orderBy: { name: 'asc' } }),
+      prisma.plan.count(),
+      prisma.reservation.count()
+    ]);
+    const discovered = venues.filter((v) => v.id.startsWith('disc-'));
+    res.json({
+      stats: {
+        users: users.length,
+        venues: venues.length,
+        seededVenues: venues.length - discovered.length,
+        discoveredVenues: discovered.length,
+        plans,
+        reservations
+      },
+      users,
+      venues
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Descubre lugares en las fuentes de tendencias y los incorpora a la BBDD (server-side,
+// para que funcione también en producción sin ejecutar el agente a mano).
+app.post('/api/admin/incorporate-venues', requireAdmin, async (_req, res, next) => {
+  try {
+    const discovered = await getDiscoveredVenues();
+    let incorporated = 0;
+    let updated = 0;
+    for (const v of discovered) {
+      const existing = await prisma.venue.findUnique({ where: { id: v.id }, select: { id: true } });
+      await prisma.venue.upsert({ where: { id: v.id }, update: v, create: v });
+      if (existing) updated += 1;
+      else incorporated += 1;
+    }
+    res.json({ discovered: discovered.length, incorporated, updated });
   } catch (err) {
     next(err);
   }

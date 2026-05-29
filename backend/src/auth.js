@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
@@ -10,6 +11,7 @@ const {
 const { COLORS } = require('./data/seedData');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const RP_ID = process.env.RP_ID || 'localhost';
 const RP_NAME = 'Link & Plan';
 const RP_ORIGIN = (process.env.RP_ORIGIN || 'http://localhost:3000')
@@ -261,9 +263,40 @@ function createAuthRouter(prisma) {
 
 function requireAuth(req, res, next) {
   const session = readSession(req);
-  if (!session) return res.status(401).json({ message: 'Not authenticated' });
+  if (!session || !session.sub) return res.status(401).json({ message: 'Not authenticated' });
   req.userId = session.sub;
   next();
 }
 
-module.exports = { createAuthRouter, requireAuth };
+// Compara la contraseña de admin en tiempo constante (evita timing attacks triviales).
+function verifyAdminPassword(password) {
+  if (!ADMIN_PASSWORD || typeof password !== 'string') return false;
+  const given = Buffer.from(password);
+  const expected = Buffer.from(ADMIN_PASSWORD);
+  if (given.length !== expected.length) return false;
+  return crypto.timingSafeEqual(given, expected);
+}
+
+function signAdminToken() {
+  return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: '12h' });
+}
+
+function requireAdmin(req, res, next) {
+  let token = req.headers?.['x-admin-token'];
+  if (!token) {
+    const header = req.headers?.authorization || req.headers?.Authorization;
+    if (header && typeof header === 'string' && header.toLowerCase().startsWith('bearer ')) {
+      token = header.slice(7).trim();
+    }
+  }
+  if (!token) return res.status(401).json({ message: 'Admin auth required' });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload || payload.admin !== true) return res.status(403).json({ message: 'Not admin' });
+    next();
+  } catch {
+    return res.status(401).json({ message: 'Invalid admin token' });
+  }
+}
+
+module.exports = { createAuthRouter, requireAuth, verifyAdminPassword, signAdminToken, requireAdmin };

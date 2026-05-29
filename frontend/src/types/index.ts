@@ -115,6 +115,19 @@ export type PlanSuggestions = {
   suggestions: PlanSuggestion[];
 };
 
+export type AdminOverview = {
+  stats: {
+    users: number;
+    venues: number;
+    seededVenues: number;
+    discoveredVenues: number;
+    plans: number;
+    reservations: number;
+  };
+  users: User[];
+  venues: Venue[];
+};
+
 export type Reservation = {
   id: string;
   code: string;

@@ -8,7 +8,7 @@ import { FriendsPanel } from '@/components/FriendsPanel';
 import { OnboardingGustos } from '@/components/OnboardingGustos';
 import { useAuth } from '@/lib/authContext';
 import { buildTimeline, formatDuration } from '@/lib/timeline';
-import type { Plan, PlanSuggestion, PlanSuggestions, StoredPlan, TrendingEvent, User, Venue } from '@/types';
+import type { AdminOverview, Plan, PlanSuggestion, PlanSuggestions, StoredPlan, TrendingEvent, User, Venue } from '@/types';
 
 const DURATIONS = [
   { value: 'corto', label: 'Corto · 1 plan (~1-2h)' },
@@ -36,7 +36,7 @@ const ZONES = [
   'Tetuán'
 ];
 
-type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'news';
+type Tab = 'perfil' | 'amigos' | 'planes' | 'generar' | 'sitios' | 'news' | 'admin';
 
 export default function Home() {
   const { user: authUser, loading: authLoading, logout, setUser } = useAuth();
@@ -98,6 +98,45 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const [duration, setDuration] = useState<'corto' | 'medio' | 'largo'>('medio');
   const contentRef = useRef<HTMLElement>(null);
+
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [adminOverview, setAdminOverview] = useState<AdminOverview | null>(null);
+  const [adminPw, setAdminPw] = useState('');
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminMsg, setAdminMsg] = useState<string | null>(null);
+
+  async function adminLogin() {
+    setAdminBusy(true);
+    setAdminError(null);
+    try {
+      const { token } = await api.adminLogin(adminPw);
+      setAdminToken(token);
+      setAdminPw('');
+      setAdminOverview(await api.adminOverview(token));
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : 'No se pudo entrar');
+    } finally {
+      setAdminBusy(false);
+    }
+  }
+
+  async function incorporateVenues() {
+    if (!adminToken) return;
+    setAdminBusy(true);
+    setAdminMsg(null);
+    setAdminError(null);
+    try {
+      const r = await api.adminIncorporateVenues(adminToken);
+      setAdminMsg(`Descubiertos ${r.discovered} · nuevos ${r.incorporated} · actualizados ${r.updated}`);
+      setAdminOverview(await api.adminOverview(adminToken));
+      await refresh();
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : 'No se pudo incorporar');
+    } finally {
+      setAdminBusy(false);
+    }
+  }
 
   function selectTab(key: Tab) {
     setActive(key);
@@ -344,7 +383,8 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                 ['planes', 'Mis planes', '🗓️'],
                 ['generar', 'Generar plan', '✨'],
                 ['sitios', 'Mis sitios', '📍'],
-                ['news', 'Noticias', '🔥']
+                ['news', 'Noticias', '🔥'],
+                ['admin', 'Admin', '🔒']
               ] as const).map(([key, label, icon]) => (
                 <button
                   key={key}
@@ -789,6 +829,100 @@ function App({ authUser, onLogout }: { authUser: User; onLogout: () => Promise<v
                       </a>
                     ))}
                     <p className="pt-1 text-center text-[11px] text-[#8DA0BC]">Fuentes: esMadrid · Madrid Secreto · Entradas.com · Agenda Madrid · Un Buen Día en Madrid · se actualiza periódicamente</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {active === 'admin' ? (
+              <div className="animate-in space-y-5">
+                <div>
+                  <h1 className="text-2xl font-semibold">🔒 Administración</h1>
+                  <p className="mt-0.5 text-sm text-[#5B6B82]">Zona restringida. Requiere contraseña de administrador.</p>
+                </div>
+
+                {!adminToken ? (
+                  <div className="max-w-sm rounded-2xl border border-[#D8E3F2] bg-white p-5">
+                    <label className="block text-sm">
+                      Contraseña de administrador
+                      <input
+                        type="password"
+                        className={inputCls}
+                        value={adminPw}
+                        onChange={(e) => setAdminPw(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') void adminLogin();
+                        }}
+                        placeholder="••••••••"
+                      />
+                    </label>
+                    {adminError ? <p className="mt-2 text-xs text-red-600">{adminError}</p> : null}
+                    <button
+                      disabled={adminBusy || !adminPw}
+                      className="mt-3 w-full rounded-xl bg-[#0A2E6E] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+                      onClick={() => void adminLogin()}
+                    >
+                      {adminBusy ? 'Comprobando…' : 'Entrar'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                      {([
+                        ['Usuarios', adminOverview?.stats.users],
+                        ['Venues', adminOverview?.stats.venues],
+                        ['Del seed', adminOverview?.stats.seededVenues],
+                        ['Descubiertos', adminOverview?.stats.discoveredVenues],
+                        ['Planes', adminOverview?.stats.plans],
+                        ['Reservas', adminOverview?.stats.reservations]
+                      ] as const).map(([label, value]) => (
+                        <div key={label} className="rounded-2xl border border-[#D8E3F2] bg-white p-4 text-center">
+                          <p className="display text-2xl text-[#0A2E6E]">{value ?? '—'}</p>
+                          <p className="mt-0.5 text-[11px] uppercase tracking-wider text-[#5B6B82]">{label}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-2xl border border-[#D8E3F2] bg-white p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="font-medium">Incorporar venues de tendencias</p>
+                          <p className="text-xs text-[#5B6B82]">Descubre lugares en las fuentes (Entradas, Agenda Madrid…) y los añade a la BBDD.</p>
+                        </div>
+                        <button
+                          disabled={adminBusy}
+                          className="rounded-xl bg-gradient-to-r from-[#0E4DA4] to-[#3B82D6] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-50"
+                          onClick={() => void incorporateVenues()}
+                        >
+                          {adminBusy ? 'Incorporando…' : '✨ Incorporar venues'}
+                        </button>
+                      </div>
+                      {adminMsg ? <p className="mt-2 text-xs text-[#2E7D52]">{adminMsg}</p> : null}
+                      {adminError ? <p className="mt-2 text-xs text-red-600">{adminError}</p> : null}
+                    </div>
+
+                    <div className="rounded-2xl border border-[#D8E3F2] bg-white p-5">
+                      <p className="mb-2 text-sm font-semibold">Usuarios ({adminOverview?.users.length ?? 0})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(adminOverview?.users ?? []).map((u) => (
+                          <span key={u.id} className="flex items-center gap-1.5 rounded-full border border-[#CFE0F3] px-3 py-1 text-xs">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: u.color }} />
+                            {u.name} <span className="text-[#8DA0BC]">@{u.username}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      className="rounded-lg border border-[#D8E3F2] px-4 py-2 text-sm text-[#43577A] transition hover:bg-[#EAF1FB]"
+                      onClick={() => {
+                        setAdminToken(null);
+                        setAdminOverview(null);
+                        setAdminMsg(null);
+                      }}
+                    >
+                      Salir de admin
+                    </button>
                   </div>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import type { Plan, PlanSuggestions, Reservation, StoredPlan, TrendingCategories, TrendingNews, User, Venue } from '@/types';
+import type { AdminOverview, Plan, PlanSuggestions, Reservation, StoredPlan, TrendingCategories, TrendingNews, User, Venue } from '@/types';
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://link-plan-api.onrender.com';
 const TOKEN_KEY = 'lp_token';
@@ -96,6 +96,10 @@ export const api = {
     ),
   trendingCategories: (limit = 3) => request<TrendingCategories>(`/api/trends/categories?limit=${limit}`),
   trendingNews: (limit = 15) => request<TrendingNews>(`/api/trends/news?limit=${limit}`),
+  adminLogin: (password: string) => request<{ token: string }>('/api/admin/login', { method: 'POST', body: JSON.stringify({ password }) }),
+  adminOverview: (token: string) => request<AdminOverview>('/api/admin/overview', { headers: { 'x-admin-token': token } }),
+  adminIncorporateVenues: (token: string) =>
+    request<{ discovered: number; incorporated: number; updated: number }>('/api/admin/incorporate-venues', { method: 'POST', headers: { 'x-admin-token': token } }),
   auth: {
     me: () => request<User>('/api/auth/me'),
     logout: async () => {
